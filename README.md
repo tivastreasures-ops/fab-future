@@ -176,8 +176,9 @@ spoken-video version.
 
 Generated screenshots and video are excluded from Git and deployment to keep
 build assets out of source history. Download them separately for submission.
-The app source and run instructions remain in this project repository. No
-external public GitHub repository is linked yet; do not submit a guessed URL.
+The source submission repository is private:
+https://github.com/tivastreasures-ops/fab-future
+Grant access to anyone who needs to review or run it.
 Dry runs are not YouCam renders. Live preview needs a consenting user-provided
 photo, two explicit confirmations, and the configured provider key.
 
