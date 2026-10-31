@@ -48,14 +48,14 @@ export default function Settings() {
 
   return (
     <div className="mx-auto max-w-3xl px-5 py-8">
-      <PageHeading eyebrow="Studio" title="Your atelier">Names and preferences live only in this browser.</PageHeading>
+      <PageHeading eyebrow="Studio" title="Your creative space">Names and preferences live only in this browser.</PageHeading>
       <div className="grid gap-6">
         <section className="rounded-3xl bg-card gold-frame p-5 sm:p-7 grid gap-4" aria-labelledby="name-h">
           <h2 id="name-h" className="text-2xl text-plum">Naming</h2>
           <div className="velvet on-dark gold-frame-dark rounded-2xl p-5 text-center" aria-live="polite">
             <CatMark className="mx-auto h-6 w-6 text-gold" />
             <p className="font-display text-3xl mt-2 break-words" data-testid="text-settings-title-preview">{title.trim() || 'My Lookbook'}</p>
-            <p className="text-mauve text-sm">{name.trim() ? `curated by ${name.trim()}` : 'curated by you'}</p>
+            <p className="text-mauve text-sm">{name.trim() ? `made by ${name.trim()}` : 'made by me'}</p>
           </div>
           <label className="grid gap-1 text-sm font-medium">Display name
             <input className="field" value={name} maxLength={40} onChange={(e) => setName(e.target.value)} placeholder="Optional" data-testid="input-display-name" />
@@ -67,7 +67,7 @@ export default function Settings() {
             <label htmlFor="show-title" className="text-sm"><span className="font-semibold block">Put my title on exported cards</span><span className="text-muted-foreground">Off by default. When on, your collection title and name appear on PNGs.</span></label>
             <Switch id="show-title" checked={showTitle} onCheckedChange={setShowTitle} data-testid="switch-show-title" />
           </div>
-          <button type="button" className="btn-couture justify-self-start" onClick={onSave} disabled={save.isPending} data-testid="button-save-settings">{save.isPending ? 'Saving...' : 'Save studio details'}</button>
+          <button type="button" className="btn-couture justify-self-start" onClick={onSave} disabled={save.isPending} data-testid="button-save-settings">{save.isPending ? 'Saving...' : 'Save my changes'}</button>
         </section>
 
         <section className="rounded-3xl bg-card gold-frame p-5 sm:p-7 grid gap-3" aria-labelledby="priv-h">
@@ -89,7 +89,7 @@ export default function Settings() {
             </div>
           ) : <p className="text-sm text-muted-foreground">Storage estimate unavailable in this browser.</p>}
           <p className="text-sm">{persisted ? 'This browser has promised to keep your studio safe from automatic cleanup.' : 'Your browser may clear studio data when space runs low. You can ask it to keep everything.'}</p>
-          {!persisted ? <button type="button" className="btn-quiet justify-self-start" onClick={async () => { const r = await requestPersistence(); setPersisted(!!r); toast({ title: r ? 'Storage protected' : 'The browser declined for now', description: r ? undefined : 'It may grant this later as you use the studio.' }); }} data-testid="button-request-persist">Keep my studio safe</button> : null}
+          {!persisted ? <button type="button" className="btn-quiet justify-self-start" onClick={async () => { const r = await requestPersistence(); setPersisted(!!r); toast({ title: r ? 'Storage protected' : 'The browser declined for now', description: r ? undefined : 'It may grant this later as you use the studio.' }); }} data-testid="button-request-persist">Protect my creations</button> : null}
           <button type="button" className="btn-quiet justify-self-start text-destructive" onClick={() => setWipeOpen(true)} data-testid="button-wipe"><Trash2 className="h-4 w-4" aria-hidden="true" />Erase everything on this device</button>
         </section>
       </div>
@@ -97,13 +97,13 @@ export default function Settings() {
       <AlertDialog open={wipeOpen} onOpenChange={setWipeOpen}>
         <AlertDialogContent className="bg-card border-2 border-gold">
           <AlertDialogHeader>
-            <AlertDialogTitle className="font-display text-2xl text-plum">Erase the whole atelier?</AlertDialogTitle>
+            <AlertDialogTitle className="font-display text-2xl text-plum">Erase everything on this device?</AlertDialogTitle>
             <AlertDialogDescription>Every look, reference, card and setting on this device will be removed. This cannot be undone.</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel className="min-h-11">Keep everything</AlertDialogCancel>
             <AlertDialogAction className="min-h-11 bg-destructive text-destructive-foreground" data-testid="button-confirm-wipe"
-              onClick={async () => { try { await db.wipe(); qc.invalidateQueries({ queryKey: ['idb'] }); toast({ title: 'The atelier is fresh and empty' }); refreshStorage(); } catch (e) { toast({ title: 'Could not erase', description: friendlyStorageError(e) }); } }}>Erase</AlertDialogAction>
+              onClick={async () => { try { await db.wipe(); qc.invalidateQueries({ queryKey: ['idb'] }); toast({ title: 'Your space is clear and ready' }); refreshStorage(); } catch (e) { toast({ title: 'Could not erase', description: friendlyStorageError(e) }); } }}>Erase</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

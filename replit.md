@@ -1,6 +1,6 @@
 # Fabulous Future Me
 
-A private creative studio for imagining lipstick looks, saving possible selves locally, and exporting personal vision-board cards.
+A personal creative playground for imagining lipstick looks, saving possible selves locally, and exporting personal vision-board cards.
 
 ## Run & Operate
 
@@ -47,6 +47,7 @@ Design custom-color lipstick looks; save and edit them offline; create PNGs with
 
 - Inform the user; never overrule the artist. Allow all valid colors. No beauty assessments, flaw-correction language, store, public social feed, or non-lipstick makeup.
 - The supplied studio illustration belongs on the darkened landing hero only; functional text stays live HTML.
+- Use approachable, imaginative US English in user-facing copy. Avoid “atelier”; keep the plum-and-gold styling and the bottom navigation label “Studio”.
 
 ## Gotchas
 

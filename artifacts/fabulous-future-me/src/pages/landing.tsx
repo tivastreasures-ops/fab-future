@@ -9,7 +9,7 @@ import studioArt from '@assets/Fabulous_Future_Me_Vanity_Studio_1793474578103.pn
 import { SEED } from '@/lib/seed';
 
 const DESTS = [
-  { href: '/draft', title: 'Imagine', sub: 'The drafting table', body: 'Mix any colour, name the mood, pin references.', icon: Palette, cls: 'velvet' },
+  { href: '/draft', title: 'Imagine', sub: 'The drafting table', body: 'Mix any color, name the mood, pin references.', icon: Palette, cls: 'velvet' },
   { href: '/vanity', title: 'Try On', sub: 'The vanity', body: 'A lipstick preview, only when you ask for it.', icon: Sparkles, cls: 'velvet-teal' },
   { href: '/wardrobe', title: 'Collect', sub: 'The wardrobe', body: 'Your looks, your vision board, your cards.', icon: BookHeart, cls: 'velvet' },
 ];
@@ -36,10 +36,10 @@ export default function Landing() {
         ))}
         <div className="relative mx-auto max-w-6xl px-5 py-14 sm:py-24 grid gap-10 md:grid-cols-[1.2fr_1fr] items-center">
           <div className="rise">
-            <p className="eyebrow">A private couture atelier</p>
+            <p className="eyebrow">A personal creative playground</p>
             <h1 className="mt-3 text-5xl sm:text-7xl leading-[0.95]">Fabulous <em className="gold-text not-italic">Future</em> Me</h1>
             <p className="mt-5 font-display italic text-2xl sm:text-3xl text-mauve" data-testid="text-tagline">{TAGLINE}</p>
-            <p className="mt-4 max-w-md text-cream/85">Imagine possible selves in colour. Nothing here corrects you. Drafts stay here; an optional live preview sends your photo to YouCam.</p>
+            <p className="mt-4 max-w-md text-cream/85">Imagine possible selves in color. Nothing here corrects you. Drafts stay here; an optional live preview sends your photo to YouCam.</p>
             <div className="mt-8 flex flex-wrap gap-3 items-center">
               <button type="button" className="btn-gold sheen text-lg px-8 min-h-14" onClick={start} data-testid="button-start-look">
                 Start a Look <ArrowRight className="h-5 w-5" aria-hidden="true" />
@@ -50,14 +50,14 @@ export default function Landing() {
           <Link href="/wardrobe" className="rise block rounded-3xl gold-frame-dark p-6 sm:p-8 bg-white/5 backdrop-blur-sm" style={{ animationDelay: '0.15s' }} data-testid="link-collection-title">
             <div className="flex items-center gap-2 text-gold"><CatMark className="h-6 w-6" /><span className="eyebrow">Your collection</span></div>
             <p className="font-display text-4xl sm:text-5xl mt-3 break-words" data-testid="text-collection-title">{settings.collectionTitle}</p>
-            {settings.displayName ? <p className="text-mauve mt-1">curated by {settings.displayName}</p> : <p className="text-mauve mt-1">Rename it any time in Studio</p>}
+            {settings.displayName ? <p className="text-mauve mt-1">made by {settings.displayName}</p> : <p className="text-mauve mt-1">Rename it any time in Studio</p>}
           </Link>
         </div>
         <div className="vanity-bulbs" aria-hidden="true" />
       </section>
 
       <section className="mx-auto max-w-6xl px-5 py-12" aria-labelledby="dest-h">
-        <h2 id="dest-h" className="text-3xl text-plum">Three rooms, one atelier</h2>
+        <h2 id="dest-h" className="text-3xl text-plum">Three ways to play</h2>
         <ul className="mt-6 grid gap-4 md:grid-cols-[1.3fr_1fr_1fr]">
           {DESTS.map((d, i) => (
             <li key={d.href} className="rise" style={{ animationDelay: `${0.1 * i}s` }}>

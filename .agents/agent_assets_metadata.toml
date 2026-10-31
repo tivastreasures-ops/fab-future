@@ -5,14 +5,14 @@ generated = []
 id = "FnkJg2hUm1IMPDkDLu7Js"
 uri = "file://generated-artifacts/Fabulous-Future-Me-walkthrough.mp4"
 type = "video"
-title = "Fabulous Future Me walkthrough video"
-description = "72-second silent, captioned video built from current app screenshots. It does not depict recorded interactions or a YouCam render."
+title = "Updated Fabulous Future Me walkthrough"
+description = "72-second captioned screenshot montage with the refreshed copy. It is not a recording of interactions or a YouCam result."
 logical_id = "f8f70cdf-6e30-4b18-9d71-fcae2e8a4323"
-content_hash = "sha256:a1b6e689adc0f1c29b5aaaee5f8cb376781a0273a43c17e314ba82b8ad2b61c9"
-size = 619514
-mtime_ms = 1793475323051
-storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:d29ad31d-61be-4ea0-bdc4-23e1e56a189c/f8f70cdf-6e30-4b18-9d71-fcae2e8a4323/44bfc533-f5da-4a57-9ee4-c24824631008"
-storage_version_token = "1793475343953559"
+content_hash = "sha256:0b3cd714c07f1e2abef60e6267db6f6945729f9bca7294ac87e1a00680b6ebdb"
+size = 662305
+mtime_ms = 1793476578195
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:d29ad31d-61be-4ea0-bdc4-23e1e56a189c/f8f70cdf-6e30-4b18-9d71-fcae2e8a4323/9fada126-6b54-43f0-882e-0750ba988ed3"
+storage_version_token = "1793476744432473"
 content_type = "video/mp4"
 
 [[outputs]]
@@ -83,4 +83,18 @@ size = 96958
 mtime_ms = 1793475029523
 storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:d29ad31d-61be-4ea0-bdc4-23e1e56a189c/c4701b46-2a6a-437f-993b-ad42538458cb/c91be41c-f02c-4c61-9712-2c4cb9b40065"
 storage_version_token = "1793475346739402"
+content_type = "image/jpeg"
+
+[[outputs]]
+id = "ouwcEe6Q3amYK3yHUpjyj"
+uri = "file://generated-artifacts/screenshots/settings-360px-viewport.jpg"
+type = "image"
+title = "Settings at 360px — viewport check"
+description = "A normal-height mobile viewport after the copy update. The Studio navigation is fixed at the bottom; full-page screenshots can misplace fixed elements."
+logical_id = "fd246a0e-1dd3-4522-8347-301fd28dbdf4"
+content_hash = "sha256:090b185fb635bc7677df84471be956eaa208c0467afeea4b92f41c845990d4fd"
+size = 42867
+mtime_ms = 1793476731819
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:d29ad31d-61be-4ea0-bdc4-23e1e56a189c/fd246a0e-1dd3-4522-8347-301fd28dbdf4/25eb3ded-4208-40a8-b226-5af7f79cc82b"
+storage_version_token = "1793476743768542"
 content_type = "image/jpeg"

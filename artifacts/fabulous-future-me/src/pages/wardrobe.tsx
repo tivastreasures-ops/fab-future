@@ -84,7 +84,7 @@ export default function Wardrobe() {
   return (
     <div className="mx-auto max-w-6xl px-5 py-8">
       <PageHeading eyebrow="The wardrobe" title={settings.collectionTitle}>
-        {settings.displayName ? `Curated by ${settings.displayName}. ` : ''}Every look you saved, kept only on this device.
+        {settings.displayName ? `Made by ${settings.displayName}. ` : ''}Every look you saved, kept only on this device.
       </PageHeading>
       <div role="tablist" aria-label="Wardrobe" className="mb-6 inline-flex rounded-full border-2 border-gold p-1 bg-card">
         {(['looks', 'board'] as const).map((t) => (

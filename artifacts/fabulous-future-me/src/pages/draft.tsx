@@ -109,17 +109,17 @@ export default function Draft() {
   return (
     <div className="mx-auto max-w-6xl px-5 py-8">
       <PageHeading eyebrow="The drafting table" title={editId ? 'Refine this look' : 'Imagine'}>
-        Pick a lipstick colour and finish, then dress it with a mood. There are no wrong answers.
+        Pick a lipstick color and finish, then dress it with a mood. There are no wrong answers.
       </PageHeading>
       <div className="grid gap-6 lg:grid-cols-[1fr_340px] items-start">
         <div className="grid gap-6">
           <section className="rounded-3xl bg-card gold-frame p-5 sm:p-7" aria-labelledby="col-h">
-            <h2 id="col-h" className="text-2xl text-plum mb-4">Lipstick colour</h2>
+            <h2 id="col-h" className="text-2xl text-plum mb-4">Lipstick color</h2>
             <ColorStudio hex={hex} onChange={setHex} />
           </section>
           <section className="rounded-3xl bg-card gold-frame p-5 sm:p-7" aria-labelledby="fin-h">
             <h2 id="fin-h" className="text-2xl text-plum mb-1">Finish</h2>
-            <p className="text-sm text-muted-foreground mb-4">One colour, one finish. Lipstick only.</p>
+            <p className="text-sm text-muted-foreground mb-4">One color, one finish. Lipstick only.</p>
             <div role="radiogroup" aria-labelledby="fin-h" className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               {FINISHES.map((f) => (
                 <button key={f} type="button" role="radio" aria-checked={finish === f} onClick={() => setFinish(f)}
