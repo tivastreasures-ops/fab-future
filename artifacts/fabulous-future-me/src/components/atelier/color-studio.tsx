@@ -106,7 +106,7 @@ export function ColorStudio({ hex, onChange }: Props) {
             <input type="color" value={hex.toLowerCase()} onChange={(e) => onChangeRef.current(e.target.value.toUpperCase())} className="h-12 w-14 cursor-pointer rounded-xl border-2 border-gold bg-card p-1" data-testid="input-native-color" />
           </label>
         </div>
-        <p id="hex-help" className={cn('text-xs', valid ? 'text-muted-foreground' : 'text-destructive')}>{valid ? 'Six digits, like #8E1F3F. Every colour is welcome.' : 'Keep typing — a hex needs six digits after #.'}</p>
+        <p id="hex-help" className={cn('text-xs', valid ? 'text-muted-foreground' : 'text-destructive')}>{valid ? 'Six digits, like #8E1F3F. Every color is welcome.' : 'Keep typing — a hex needs six digits after #.'}</p>
       </div>
       <div className="sm:col-span-2">
         <p className="eyebrow mb-2">Curated swatches</p>

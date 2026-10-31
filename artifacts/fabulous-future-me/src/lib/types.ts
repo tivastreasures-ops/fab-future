@@ -5,7 +5,7 @@ export const FINISH_NOTES: Record<Finish, string> = {
   matte: 'Velvet-flat, no shine',
   satin: 'Soft silk glow',
   gloss: 'Wet, mirror sheen',
-  sheer: 'A whisper of colour',
+  sheer: 'A whisper of color',
   shimmer: 'Fine scattered light',
   metallic: 'Molten foil',
   holographic: 'Prismatic shift',

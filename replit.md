@@ -1,6 +1,6 @@
 # Fabulous Future Me
 
-A private creative studio for imagining lipstick looks, saving possible selves locally, and exporting personal vision-board cards.
+A personal creative playground for imagining lipstick looks, saving possible selves locally, and exporting personal vision-board cards.
 
 ## Run & Operate
 

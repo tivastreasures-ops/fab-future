@@ -66,7 +66,7 @@ export default function Vanity() {
 
   return (
     <div className="mx-auto max-w-6xl px-5 py-8">
-      <PageHeading eyebrow="The vanity" title="Try On">Lipstick only. Your colour and finish travel exactly as you chose them.</PageHeading>
+      <PageHeading eyebrow="The vanity" title="Try On">Lipstick only. Your color and finish travel exactly as you chose them.</PageHeading>
 
       <div className="grid gap-6 lg:grid-cols-[1fr_1.1fr]">
         <section className="rounded-3xl bg-card gold-frame p-5 sm:p-6 grid gap-5" aria-labelledby="pick-h">
@@ -122,7 +122,7 @@ export default function Vanity() {
           {flow.phase === 'uploading' || flow.phase === 'submitting' || flow.phase === 'polling' ? (
             <div className="grid gap-2" role="status">
               <div className="h-2 rounded-full bg-white/10 overflow-hidden"><div className="h-full w-1/3 bg-gold skeleton-silk" /></div>
-              <p>{flow.phase === 'uploading' ? 'Sending your photo securely...' : flow.phase === 'submitting' ? 'Submitting your request...' : 'The atelier is painting. This can take up to three minutes.'}</p>
+              <p>{flow.phase === 'uploading' ? 'Sending your photo securely...' : flow.phase === 'submitting' ? 'Submitting your request...' : 'Your preview is rendering. This can take up to three minutes.'}</p>
             </div>
           ) : null}
 

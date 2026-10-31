@@ -48,7 +48,7 @@ function lum(hex: string) {
   return 0.2126 * r + 0.7152 * g + 0.0722 * b;
 }
 
-/** Ink colour that reads on top of any user swatch. */
+/** Ink color that reads on top of any user swatch. */
 export function inkOn(hex: string): string {
   return lum(hex) > 0.32 ? '#2A1129' : '#FBF3E6';
 }

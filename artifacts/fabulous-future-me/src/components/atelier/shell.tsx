@@ -37,7 +37,7 @@ export function Shell({ children }: { children: ReactNode }) {
         </div>
         <div className="vanity-bulbs opacity-70" aria-hidden="true" />
       </header>
-      <main id="main" className="flex-1 pb-28 md:pb-12">{children}</main>
+      <main id="main" className="flex-1 pb-[calc(5.5rem+env(safe-area-inset-bottom))] md:pb-12">{children}</main>
       <nav aria-label="Studio" className="md:hidden fixed bottom-0 inset-x-0 z-40 velvet on-dark border-t-2 border-gold pb-[env(safe-area-inset-bottom)]">
         <ul className="grid grid-cols-4">
           {NAV.map((n) => {

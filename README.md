@@ -2,7 +2,7 @@
 
 **Your skin. Your colors. Your rules.**
 
-A private creative atelier for designing possible versions of yourself—not a
+A personal creative playground for designing possible versions of yourself—not a
 cosmetics store, beauty assessment, or flaw-correction tool.
 
 ## Run
