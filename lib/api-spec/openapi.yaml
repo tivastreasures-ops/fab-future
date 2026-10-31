@@ -1,0 +1,185 @@
+openapi: 3.1.0
+info:
+  # Do not change the title, if the title changes, the import paths will be broken
+  title: Api
+  version: 0.1.0
+  description: API specification
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+paths:
+  /studio/config:
+    get:
+      operationId: getStudioConfig
+      responses:
+        "200":
+          description: Rendering configuration
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StudioConfig"
+  /youcam/validate:
+    post:
+      operationId: validateRecipe
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RecipeInput"
+      responses:
+        "200":
+          description: Exact payload, no upstream request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RecipeValidation"
+  /youcam/upload:
+    post:
+      operationId: prepareUpload
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UploadInput"
+      responses:
+        "200":
+          description: Direct upload destination
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UploadTicket"
+  /youcam/render:
+    post:
+      operationId: createRender
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RenderInput"
+      responses:
+        "200":
+          description: Render submitted or safe dry run
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RenderJob"
+  /youcam/jobs/{jobId}:
+    get:
+      operationId: getRenderJob
+      parameters:
+        - name: jobId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Render status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RenderJob"
+  /youcam/jobs/{jobId}/image:
+    get:
+      operationId: getRenderImage
+      parameters:
+        - name: jobId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Image streamed without storage
+          content:
+            image/jpeg:
+              schema: { type: string, format: binary }
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      description: Returns server health status
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+components:
+  schemas:
+    StudioConfig:
+      type: object
+      required: [configured, dryRun, liveAllowed, unitsPerRender, errorsCharged]
+      properties:
+        configured: { type: boolean }
+        dryRun: { type: boolean }
+        liveAllowed: { type: boolean }
+        unitsPerRender: { type: integer }
+        errorsCharged: { type: boolean }
+    RecipeInput:
+      type: object
+      additionalProperties: false
+      required: [hex, finish]
+      properties:
+        hex: { type: string, pattern: "^#[0-9a-fA-F]{6}$" }
+        finish: { type: string, enum: [matte, satin, gloss, sheer, shimmer, metallic, holographic] }
+        sourceFileId: { type: string, minLength: 1 }
+        expectedPayload: { type: object, additionalProperties: true }
+    RecipeValidation:
+      type: object
+      required: [valid, payload]
+      properties:
+        valid: { type: boolean }
+        payload: { type: object, additionalProperties: true }
+    UploadInput:
+      type: object
+      additionalProperties: false
+      required: [fileName, contentType, fileSize, liveConfirmed]
+      properties:
+        fileName: { type: string, maxLength: 100 }
+        contentType: { type: string, enum: [image/jpeg, image/png] }
+        fileSize: { type: integer, minimum: 1, maximum: 5000000 }
+        liveConfirmed: { type: boolean }
+    UploadTicket:
+      type: object
+      required: [fileId, url, method, headers]
+      properties:
+        fileId: { type: string }
+        url: { type: string }
+        method: { type: string }
+        headers: { type: object, additionalProperties: { type: string } }
+    RenderInput:
+      type: object
+      additionalProperties: false
+      required: [hex, finish, expectedPayload, liveConfirmed, requestId]
+      properties:
+        hex: { type: string, pattern: "^#[0-9a-fA-F]{6}$" }
+        finish: { type: string, enum: [matte, satin, gloss, sheer, shimmer, metallic, holographic] }
+        sourceFileId: { type: string, minLength: 1 }
+        expectedPayload: { type: object, additionalProperties: true }
+        liveConfirmed: { type: boolean }
+        requestId: { type: string, minLength: 10, maxLength: 100 }
+    RenderJob:
+      type: object
+      required: [jobId, status, payload, timestamp]
+      properties:
+        jobId: { type: string }
+        status: { type: string, enum: [dry_run, pending, success, error, timeout] }
+        payload: { type: object, additionalProperties: true }
+        timestamp: { type: string }
+        error: { type: string }
+        resultImageUrl: { type: string }
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required:
+        - status
+
