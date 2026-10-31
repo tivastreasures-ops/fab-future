@@ -50,7 +50,7 @@ export default function Landing() {
           <Link href="/wardrobe" className="rise block rounded-3xl gold-frame-dark p-6 sm:p-8 bg-white/5 backdrop-blur-sm" style={{ animationDelay: '0.15s' }} data-testid="link-collection-title">
             <div className="flex items-center gap-2 text-gold"><CatMark className="h-6 w-6" /><span className="eyebrow">Your collection</span></div>
             <p className="font-display text-4xl sm:text-5xl mt-3 break-words" data-testid="text-collection-title">{settings.collectionTitle}</p>
-            {settings.displayName ? <p className="text-mauve mt-1">curated by {settings.displayName}</p> : <p className="text-mauve mt-1">Rename it any time in Studio</p>}
+            {settings.displayName ? <p className="text-mauve mt-1">made by {settings.displayName}</p> : <p className="text-mauve mt-1">Rename it any time in Studio</p>}
           </Link>
         </div>
         <div className="vanity-bulbs" aria-hidden="true" />
