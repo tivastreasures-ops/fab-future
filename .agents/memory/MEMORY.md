@@ -1,0 +1,1 @@
+- [Creative studio principles](creative-principles.md) — User-defined product boundaries, art placement, portrait privacy, and Android export priorities.

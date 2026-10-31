@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "Fabulous Future Me"
+description = "A private, offline-first creative atelier for imagining lipstick looks, keeping a personal lookbook, and exporting cards. Optional YouCam lipstick-only try-on with explicit recipe confirmation."
+version = "1.0.0"
+id = "artifacts/fabulous-future-me"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 20285
+
+[services.development]
+run = "pnpm --filter @workspace/fabulous-future-me run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/fabulous-future-me", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/fabulous-future-me/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "20285"
+BASE_PATH = "/"

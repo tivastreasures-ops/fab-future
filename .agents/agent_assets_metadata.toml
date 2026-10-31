@@ -1,0 +1,86 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "FnkJg2hUm1IMPDkDLu7Js"
+uri = "file://generated-artifacts/Fabulous-Future-Me-walkthrough.mp4"
+type = "video"
+title = "Fabulous Future Me walkthrough video"
+description = "72-second silent, captioned video built from current app screenshots. It does not depict recorded interactions or a YouCam render."
+logical_id = "f8f70cdf-6e30-4b18-9d71-fcae2e8a4323"
+content_hash = "sha256:a1b6e689adc0f1c29b5aaaee5f8cb376781a0273a43c17e314ba82b8ad2b61c9"
+size = 619514
+mtime_ms = 1793475323051
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:d29ad31d-61be-4ea0-bdc4-23e1e56a189c/f8f70cdf-6e30-4b18-9d71-fcae2e8a4323/44bfc533-f5da-4a57-9ee4-c24824631008"
+storage_version_token = "1793475343953559"
+content_type = "video/mp4"
+
+[[outputs]]
+id = "UenQJznALeLiLmK3SyTfS"
+uri = "file://generated-artifacts/screenshots/landing-desktop.jpg"
+type = "image"
+title = "Landing page — desktop"
+description = "The live app at desktop size, with the supplied studio illustration dimmed behind the landing content."
+logical_id = "48fc8232-4221-4115-bd27-feb60df97fa3"
+content_hash = "sha256:e1d09fcf61e24ff352763adbc282a7cc2cd97c11fe763542f31240562d498def"
+size = 91467
+mtime_ms = 1793475254579
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:d29ad31d-61be-4ea0-bdc4-23e1e56a189c/48fc8232-4221-4115-bd27-feb60df97fa3/6ef3471d-118d-47d0-a6c7-fd978f40d69e"
+storage_version_token = "1793475344529761"
+content_type = "image/jpeg"
+
+[[outputs]]
+id = "cBe1jZuaIXuNORde3HFsV"
+uri = "file://generated-artifacts/screenshots/drafting-table-mobile.jpg"
+type = "image"
+title = "Drafting table — mobile"
+description = "360px mobile layout showing color selection, curated swatches, finish, mood, notes, and save controls."
+logical_id = "d56456a1-1241-4d6f-923f-ec46734ce3a8"
+content_hash = "sha256:36b80d0b72ee88eb0beb153e2744a1a87493d56095a14a45f462ec54bdd7f44e"
+size = 173143
+mtime_ms = 1793475026175
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:d29ad31d-61be-4ea0-bdc4-23e1e56a189c/d56456a1-1241-4d6f-923f-ec46734ce3a8/ab086aa9-03e1-442c-a3b7-005602a41455"
+storage_version_token = "1793475345101885"
+content_type = "image/jpeg"
+
+[[outputs]]
+id = "dmR9MwTYWrc84ZH8Hfftn"
+uri = "file://generated-artifacts/screenshots/vanity-mobile.jpg"
+type = "image"
+title = "Vanity — mobile empty state"
+description = "Mobile vanity with the required no-photo placeholder state; no sample portrait is included."
+logical_id = "68dab600-ece1-470a-9fac-7267d8c17727"
+content_hash = "sha256:de9fec4c9c6dab34a6884973c00218f60e68834bed2abe24900840ac1fb0c861"
+size = 26861
+mtime_ms = 1793475027819
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:d29ad31d-61be-4ea0-bdc4-23e1e56a189c/68dab600-ece1-470a-9fac-7267d8c17727/8181e2f5-d97d-4ad8-b024-b14379b19b31"
+storage_version_token = "1793475345675595"
+content_type = "image/jpeg"
+
+[[outputs]]
+id = "On5EEDtwMUvtbebfomT_f"
+uri = "file://generated-artifacts/screenshots/wardrobe-desktop.jpg"
+type = "image"
+title = "Wardrobe — desktop empty state"
+description = "The local collection screen before a user saves any looks."
+logical_id = "affa39f2-f073-407a-9670-d73a2e23e655"
+content_hash = "sha256:5058c6f3563903d103fc18c2d0940f0e56e38529a3a0e85521406f755e2fc6f6"
+size = 56259
+mtime_ms = 1793475058139
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:d29ad31d-61be-4ea0-bdc4-23e1e56a189c/affa39f2-f073-407a-9670-d73a2e23e655/1fe2fbee-079e-4dc8-a32f-167d0a4da8b6"
+storage_version_token = "1793475346215789"
+content_type = "image/jpeg"
+
+[[outputs]]
+id = "hqTL417Unj0FuOiZ3njwi"
+uri = "file://generated-artifacts/screenshots/studio-settings-mobile.jpg"
+type = "image"
+title = "Studio settings — mobile"
+description = "Collection title, opt-in title on exported cards, privacy, and local storage settings."
+logical_id = "c4701b46-2a6a-437f-993b-ad42538458cb"
+content_hash = "sha256:23b53cc12942c5ef549f225aab1e9280f8346115ea8b6aa2d44737006ad115bc"
+size = 96958
+mtime_ms = 1793475029523
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:d29ad31d-61be-4ea0-bdc4-23e1e56a189c/c4701b46-2a6a-437f-993b-ad42538458cb/c91be41c-f02c-4c61-9712-2c4cb9b40065"
+storage_version_token = "1793475346739402"
+content_type = "image/jpeg"
