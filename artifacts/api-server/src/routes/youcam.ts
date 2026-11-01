@@ -1,13 +1,14 @@
 import { Router, type IRouter, type Request, type Response, type NextFunction } from "express";
 import { randomUUID, createHmac, timingSafeEqual } from "node:crypto";
 import { Readable } from "node:stream";
+import { logger } from "../lib/logger";
 import {
   GetStudioConfigResponse, ValidateRecipeBody, ValidateRecipeResponse,
   PrepareUploadBody, PrepareUploadResponse, CreateRenderBody, CreateRenderResponse,
   GetRenderJobParams, GetRenderJobResponse,
 } from "@workspace/api-zod";
 import { buildPayload, assertExactPayload, UNUPLOADED } from "../lib/youcam-recipe";
-import { hasYouCamKey, liveAllowed, youcam } from "../lib/youcam-client";
+import { dryRunEnabled, hasYouCamKey, liveAllowed, youcam } from "../lib/youcam-client";
 
 const router: IRouter = Router();
 type Job = {
@@ -21,7 +22,8 @@ const requests = new Map<string, { jobId: string; fingerprint: string }>();
 const rate = new Map<string, { count: number; until: number }>();
 const pending = new Set<string>();
 let daily = { day: "", count: 0 };
-const TTL = 30 * 60_000;
+// Keep task ids around longer than YouCam's documented 24-hour lookup window.
+const TTL = 25 * 60 * 60_000;
 const secret = process.env.SESSION_SECRET;
 // This cookie identifies a transient browser session, not an account or login.
 const sessionSecret = secret || randomUUID();
@@ -89,7 +91,7 @@ function error(res: Response, e: unknown, status = 400) {
 
 router.get("/studio/config", (_req, res) => {
   res.json(GetStudioConfigResponse.parse({
-    configured: hasYouCamKey(), dryRun: true,
+    configured: hasYouCamKey(), dryRun: dryRunEnabled(),
     liveAllowed: liveAllowed(), unitsPerRender: 1, errorsCharged: false,
   }));
 });
@@ -183,27 +185,28 @@ router.post("/youcam/render", async (req, res): Promise<void> => {
 });
 
 async function refresh(job: Job) {
-  if (job.status !== "pending") return;
-  if (Date.now() - job.created > 180_000) {
-    job.status = "timeout";
-    job.error = "YouCam took longer than expected. Your look is saved. Check the YouCam console before retrying: a timeout does not cancel a provider task.";
-    return;
-  }
+  // A browser timeout does not cancel the provider task. Keep polling the same
+  // task on demand so a later retry can retrieve its result without a new POST.
+  if (job.status !== "pending" || !job.taskId) return;
   if (job.polling) { await job.polling; return; }
-  if (Date.now() - job.lastPoll < 2500 || !job.taskId) return;
+  if (Date.now() - job.lastPoll < 2500) return;
   job.lastPoll = Date.now();
   job.polling = (async () => {
     try {
       const result = await youcam(`/task/makeup-vto/${encodeURIComponent(job.taskId!)}`);
       const data = result.data;
       if (data?.task_status === "success") {
-        // Official structured schema uses results.url; prose also documents an array.
-        const url = data.results?.url || data.results?.[0]?.download_url;
+        // Current OpenAPI response: data.task_status and data.results.url.
+        const url = data.results?.url;
         if (typeof url !== "string" || !url.startsWith("https://")) throw new Error("YouCam returned no downloadable result.");
         job.status = "success"; job.downloadUrl = url; job.error = undefined;
       } else if (data?.task_status === "error") {
+        logger.error({ taskId: job.taskId, providerBody: JSON.stringify(data).slice(0, 16000) }, "YouCam rendering task failed");
         job.status = "error";
         job.error = "YouCam couldn't render this photo. Your look is saved. Try good light with your entire face centered, then retry.";
+      } else if (data?.task_status !== "running") {
+        logger.error({ taskId: job.taskId, providerBody: JSON.stringify(data).slice(0, 16000) }, "YouCam returned an unexpected task status");
+        job.error = "The preview status is not available yet. Your look is saved; check this same preview again before starting another.";
       }
     } catch {
       // Transient GET failures don't trigger a new paid render.
