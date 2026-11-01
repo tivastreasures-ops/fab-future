@@ -1,4 +1,4 @@
-import { inkOn } from './color';
+import { BULLET_SINK, BULLET_WIDTH_IN_OPENING, CARD_ART_FILES, CASE_PROFILES, bulletSourceRect, loadCardArt, tintBullet, tintKiss } from './card-art';
 import { TAGLINE, type Look, type StudioSettings } from './types';
 
 const W = 1080;
@@ -84,40 +84,6 @@ function catMark(ctx: CanvasRenderingContext2D, x: number, y: number, s: number)
   ctx.restore();
 }
 
-function drawContain(ctx: CanvasRenderingContext2D, img: ImageBitmap, x: number, y: number, w: number, h: number) {
-  ctx.save();
-  ctx.fillStyle = 'rgba(0,0,0,0.25)';
-  ctx.fillRect(x, y, w, h);
-  const s = Math.min(w / img.width, h / img.height);
-  const dw = img.width * s;
-  const dh = img.height * s;
-  ctx.drawImage(img, x + (w - dw) / 2, y + (h - dh) / 2, dw, dh);
-  ctx.strokeStyle = GOLD;
-  ctx.lineWidth = 2;
-  ctx.strokeRect(x, y, w, h);
-  ctx.restore();
-}
-
-function swatchRow(ctx: CanvasRenderingContext2D, colors: string[], x: number, y: number, maxW: number) {
-  const n = Math.min(colors.length, 8);
-  if (!n) return;
-  const size = Math.min(96, (maxW - (n - 1) * 18) / n);
-  colors.slice(0, 8).forEach((c, i) => {
-    const cx = x + i * (size + 18);
-    ctx.fillStyle = c;
-    ctx.beginPath();
-    ctx.roundRect(cx, y, size, size, 16);
-    ctx.fill();
-    ctx.strokeStyle = GOLD;
-    ctx.lineWidth = 2;
-    ctx.stroke();
-    ctx.fillStyle = CREAM;
-    ctx.font = `500 ${Math.round(size * 0.2)}px ${MONO}`;
-    ctx.textAlign = 'center';
-    ctx.fillText(c.toUpperCase(), cx + size / 2, y + size + 30);
-  });
-  ctx.textAlign = 'left';
-}
 
 function toBlob(canvas: HTMLCanvasElement): Promise<Blob> {
   return new Promise((res, rej) => canvas.toBlob((b) => (b ? res(b) : rej(new Error('The card could not be painted.'))), 'image/png'));
@@ -150,93 +116,306 @@ function footer(ctx: CanvasRenderingContext2D) {
   ctx.textAlign = 'left';
 }
 
+export type CardStyle = 'simple' | 'luxe' | 'kiss';
+export const CARD_STYLES: { id: CardStyle; label: string; hint: string }[] = [
+  { id: 'simple', label: 'Simple', hint: 'Editorial swatch and shade name' },
+  { id: 'luxe', label: 'Luxe', hint: 'Ornate gold case, your bullet' },
+  { id: 'kiss', label: 'Kiss Mark', hint: 'A kiss in your exact shade' },
+];
+
 export interface LookCardSnapshot {
   look: Look;
   settings: StudioSettings;
+  style: CardStyle;
 }
 
-export async function renderLookCard(snap: LookCardSnapshot, image: Blob | null): Promise<Blob> {
-  const { look, settings } = snap;
-  if (document.fonts?.ready) await document.fonts.ready;
+export interface LookCardResult {
+  blob: Blob;
+  /** Artwork files that could not be loaded; the card shows a labeled swatch instead. */
+  missingArt: string[];
+}
+
+const PLUM = '#3B1639';
+const DEEP_GOLD = '#9A7232';
+const PAPER = '#F5EBDD';
+
+function paperBackdrop(ctx: CanvasRenderingContext2D, blush: boolean) {
+  ctx.fillStyle = PAPER;
+  ctx.fillRect(0, 0, W, H);
+  const r = ctx.createRadialGradient(W / 2, H * 0.38, 40, W / 2, H * 0.38, W * 0.8);
+  r.addColorStop(0, blush ? 'rgba(228,198,214,0.55)' : 'rgba(255,250,240,0.7)');
+  r.addColorStop(1, 'rgba(228,198,214,0)');
+  ctx.fillStyle = r;
+  ctx.fillRect(0, 0, W, H);
+  ctx.strokeStyle = DEEP_GOLD;
+  ctx.lineWidth = 4;
+  ctx.strokeRect(36, 36, W - 72, H - 72);
+  ctx.lineWidth = 1.5;
+  ctx.strokeStyle = 'rgba(154,114,50,0.55)';
+  ctx.strokeRect(52, 52, W - 104, H - 104);
+}
+
+function catMarkFull(ctx: CanvasRenderingContext2D, cx: number, top: number, s: number, color: string) {
+  ctx.save();
+  ctx.translate(cx - 22 * s, top);
+  ctx.scale(s, s);
+  ctx.strokeStyle = color;
+  ctx.fillStyle = color;
+  ctx.lineWidth = 2.2;
+  ctx.lineJoin = 'round';
+  ctx.beginPath();
+  ctx.moveTo(4, 26);
+  ctx.lineTo(8, 6);
+  ctx.lineTo(16, 16);
+  ctx.quadraticCurveTo(22, 13, 28, 16);
+  ctx.lineTo(36, 6);
+  ctx.lineTo(40, 26);
+  ctx.quadraticCurveTo(22, 44, 4, 26);
+  ctx.closePath();
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.arc(16, 25, 1.6, 0, Math.PI * 2);
+  ctx.arc(28, 25, 1.6, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+}
+
+interface Ink { main: string; gold: string; soft: string }
+
+/** Centered brand header; returns the y where content may begin. */
+function brandHeader(ctx: CanvasRenderingContext2D, settings: StudioSettings, ink: Ink): number {
+  catMarkFull(ctx, W / 2, 84, 2.2, ink.gold);
+  ctx.textAlign = 'center';
+  ctx.fillStyle = ink.gold;
+  ctx.font = `600 26px ${SANS}`;
+  if ('letterSpacing' in ctx) (ctx as CanvasRenderingContext2D & { letterSpacing: string }).letterSpacing = '6px';
+  ctx.fillText('FABULOUS FUTURE ME', W / 2, 210);
+  if ('letterSpacing' in ctx) (ctx as CanvasRenderingContext2D & { letterSpacing: string }).letterSpacing = '0px';
+  let y = 232;
+  if (settings.showTitleOnCards && settings.collectionTitle.trim()) {
+    ctx.fillStyle = ink.soft;
+    ctx.font = `italic 32px ${SERIF}`;
+    const t = settings.displayName.trim() ? `${settings.collectionTitle} \u00B7 ${settings.displayName}` : settings.collectionTitle;
+    ctx.fillText(wrap(ctx, t, W - 220, 1)[0] ?? '', W / 2, 260);
+    y = 284;
+  }
+  ctx.textAlign = 'left';
+  return y;
+}
+
+function centeredFooter(ctx: CanvasRenderingContext2D, ink: Ink) {
+  ctx.strokeStyle = ink.gold;
+  ctx.globalAlpha = 0.7;
+  ctx.lineWidth = 1.2;
+  ctx.beginPath();
+  ctx.moveTo(W / 2 - 260, H - 150);
+  ctx.lineTo(W / 2 + 260, H - 150);
+  ctx.stroke();
+  ctx.globalAlpha = 1;
+  ctx.fillStyle = ink.gold;
+  ctx.font = `italic 36px ${SERIF}`;
+  ctx.textAlign = 'center';
+  ctx.fillText(TAGLINE, W / 2, H - 98);
+  ctx.textAlign = 'left';
+}
+
+interface TextLayout { nameLines: string[]; moodLines: string[]; height: number }
+
+function layoutText(ctx: CanvasRenderingContext2D, look: Look): TextLayout {
+  ctx.font = `600 84px ${SERIF}`;
+  const nameLines = wrap(ctx, look.name.trim() || 'Untitled shade', W - 220, 2);
+  ctx.font = `italic 38px ${SERIF}`;
+  const moodLines = look.mood.trim() ? wrap(ctx, look.mood.trim(), W - 260, 2) : [];
+  return { nameLines, moodLines, height: nameLines.length * 92 + 56 + (moodLines.length ? moodLines.length * 48 + 10 : 0) };
+}
+
+/** Name, hex+finish (hex appears once, here), mood. Drawn from `top`. */
+function drawText(ctx: CanvasRenderingContext2D, look: Look, ink: Ink, t: TextLayout, top: number) {
+  ctx.textAlign = 'center';
+  let y = top;
+  ctx.fillStyle = ink.main;
+  ctx.font = `600 84px ${SERIF}`;
+  for (const l of t.nameLines) {
+    y += 84;
+    ctx.fillText(l, W / 2, y);
+    y += 8;
+  }
+  y += 50;
+  ctx.fillStyle = ink.gold;
+  ctx.font = `600 30px ${MONO}`;
+  ctx.fillText(`${look.lipstick.hex.toUpperCase()}  \u00B7  ${look.lipstick.finish.toUpperCase()}`, W / 2, y);
+  if (t.moodLines.length) {
+    y += 10;
+    ctx.fillStyle = ink.soft;
+    ctx.font = `italic 38px ${SERIF}`;
+    for (const l of t.moodLines) {
+      y += 48;
+      ctx.fillText(l, W / 2, y);
+    }
+  }
+  ctx.textAlign = 'left';
+}
+
+type Box = { x: number; y: number; w: number; h: number };
+
+function fitRect(iw: number, ih: number, box: Box) {
+  const s = Math.min(box.w / iw, box.h / ih);
+  const w = iw * s;
+  const h = ih * s;
+  return { x: box.x + (box.w - w) / 2, y: box.y + (box.h - h) / 2, w, h };
+}
+
+/** Labeled swatch used when supplied artwork is absent. Never imitates the artwork. */
+function fallbackSwatch(ctx: CanvasRenderingContext2D, hex: string, box: Box, ink: Ink) {
+  const r = Math.max(60, Math.min(box.w, box.h - 70) / 2 - 10);
+  const cx = box.x + box.w / 2;
+  const cy = box.y + (box.h - 60) / 2;
+  ctx.fillStyle = hex;
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = ink.gold;
+  ctx.lineWidth = 5;
+  ctx.stroke();
+  ctx.fillStyle = ink.soft;
+  ctx.font = `italic 26px ${SERIF}`;
+  ctx.textAlign = 'center';
+  ctx.fillText('Artwork not uploaded - shade swatch shown', cx, cy + r + 50);
+  ctx.textAlign = 'left';
+}
+
+const SIMPLE_SWATCH = 132; // radius: a modest editorial swatch, not a hero block
+
+function simpleSwatch(ctx: CanvasRenderingContext2D, hex: string, cx: number, cy: number, ink: Ink) {
+  const r = SIMPLE_SWATCH;
+  ctx.save();
+  ctx.shadowColor = 'rgba(59,22,57,0.22)';
+  ctx.shadowBlur = 30;
+  ctx.shadowOffsetY = 10;
+  ctx.fillStyle = hex;
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, 0, Math.PI * 2);
+  ctx.clip();
+  const sheen = ctx.createLinearGradient(cx - r, cy - r, cx + r, cy + r);
+  sheen.addColorStop(0, 'rgba(255,255,255,0.2)');
+  sheen.addColorStop(0.5, 'rgba(255,255,255,0)');
+  sheen.addColorStop(1, 'rgba(0,0,0,0.12)');
+  ctx.fillStyle = sheen;
+  ctx.fillRect(cx - r, cy - r, r * 2, r * 2);
+  ctx.restore();
+  ctx.strokeStyle = ink.gold;
+  ctx.lineWidth = 4;
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.arc(cx, cy, r + 16, 0, Math.PI * 2);
+  ctx.stroke();
+  // flanking gold rules tie the swatch to the type column
+  ctx.beginPath();
+  ctx.moveTo(150, cy);
+  ctx.lineTo(cx - r - 40, cy);
+  ctx.moveTo(cx + r + 40, cy);
+  ctx.lineTo(W - 150, cy);
+  ctx.stroke();
+}
+
+/** Case with the tinted bullet rising from its opening; whole composition fitted into box. */
+function drawLuxe(ctx: CanvasRenderingContext2D, bullet: HTMLImageElement, kase: HTMLImageElement, key: 'caseOrnate' | 'caseSimple', hex: string, box: Box) {
+  const p = CASE_PROFILES[key];
+  const src = bulletSourceRect(bullet);
+  // Work in case-pixel units (natural size), then scale the union to the box.
+  const cw = kase.naturalWidth;
+  const ch = kase.naturalHeight;
+  const bw = p.openW * cw * BULLET_WIDTH_IN_OPENING;
+  const bh = bw * (src.sh / src.sw);
+  const bx = p.openCx * cw - bw / 2;
+  const by = p.openY * ch + bh * BULLET_SINK - bh;
+  const minY = Math.min(0, by);
+  const unionH = ch - minY;
+  const f = fitRect(cw, unionH, box);
+  const s = f.w / cw;
+  const ox = f.x;
+  const oy = f.y - minY * s;
+  ctx.save();
+  ctx.shadowColor = 'rgba(0,0,0,0.3)';
+  ctx.shadowBlur = 30;
+  ctx.shadowOffsetY = 14;
+  ctx.drawImage(tintBullet(bullet, hex), src.sx, src.sy, src.sw, src.sh, ox + bx * s, oy + by * s, bw * s, bh * s);
+  ctx.drawImage(kase, ox, oy, cw * s, ch * s);
+  ctx.restore();
+}
+
+export async function renderLookCard(snap: LookCardSnapshot): Promise<LookCardResult> {
+  const { look, settings, style } = snap;
+  const fontsReady = document.fonts?.ready ?? Promise.resolve();
+  const missingArt: string[] = [];
+  let bullet: HTMLImageElement | null = null;
+  let kase: HTMLImageElement | null = null;
+  let caseKey: 'caseOrnate' | 'caseSimple' = 'caseOrnate';
+  let kiss: HTMLImageElement | null = null;
+  if (style === 'luxe') {
+    const [b, ornate] = await Promise.all([loadCardArt('bullet'), loadCardArt('caseOrnate'), fontsReady]);
+    bullet = b;
+    kase = ornate;
+    if (!kase) {
+      kase = await loadCardArt('caseSimple');
+      caseKey = 'caseSimple';
+    }
+    if (!bullet) missingArt.push(CARD_ART_FILES.bullet);
+    if (!kase) missingArt.push(`${CARD_ART_FILES.caseOrnate} (or ${CARD_ART_FILES.caseSimple})`);
+  } else if (style === 'kiss') {
+    const [k] = await Promise.all([loadCardArt('kiss'), fontsReady]);
+    kiss = k;
+    if (!kiss) missingArt.push(CARD_ART_FILES.kiss);
+  } else {
+    await fontsReady;
+  }
+
   const canvas = document.createElement('canvas');
   canvas.width = W;
   canvas.height = H;
   const ctx = canvas.getContext('2d');
   if (!ctx) throw new Error('Canvas unavailable on this device.');
-  backdrop(ctx);
-  header(ctx, settings);
 
-  const top = settings.showTitleOnCards ? 230 : 190;
-  let bmp: ImageBitmap | null = null;
-  if (image) {
-    try {
-      bmp = await createImageBitmap(image);
-    } catch {
-      bmp = null;
-    }
-  }
+  const ink: Ink = style === 'luxe' ? { main: CREAM, gold: GOLD, soft: MAUVE } : { main: PLUM, gold: DEEP_GOLD, soft: '#7A4A72' };
+  if (style === 'luxe') backdrop(ctx);
+  else paperBackdrop(ctx, style === 'kiss');
 
-  // Lipstick swatch medallion
-  const mx = bmp ? 230 : W / 2;
-  const my = top + 170;
-  ctx.fillStyle = look.lipstick.hex;
-  ctx.beginPath();
-  ctx.arc(mx, my, 140, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.lineWidth = 6;
-  ctx.strokeStyle = GOLD;
-  ctx.stroke();
-  ctx.lineWidth = 1.5;
-  ctx.beginPath();
-  ctx.arc(mx, my, 158, 0, Math.PI * 2);
-  ctx.stroke();
-  ctx.fillStyle = inkOn(look.lipstick.hex);
-  ctx.textAlign = 'center';
-  ctx.font = `600 36px ${MONO}`;
-  ctx.fillText(look.lipstick.hex.toUpperCase(), mx, my + 6);
-  ctx.font = `600 22px ${SANS}`;
-  ctx.fillText(look.lipstick.finish.toUpperCase(), mx, my + 44);
-  ctx.textAlign = 'left';
+  const contentTop = brandHeader(ctx, settings, ink) + 30;
+  const contentBottom = H - 196;
+  const text = layoutText(ctx, look);
+  const hex = look.lipstick.hex;
 
-  if (bmp) {
-    drawContain(ctx, bmp, 440, top, 544, 360);
-    bmp.close();
+  if (style === 'simple') {
+    // Editorial group: small swatch + name/meta/mood, centered together in the open space.
+    const swatchH = (SIMPLE_SWATCH + 16) * 2;
+    const gap = 44;
+    const group = swatchH + gap + text.height;
+    const top = contentTop + Math.max(0, (contentBottom - contentTop - group) / 2);
+    simpleSwatch(ctx, hex, W / 2, top + swatchH / 2, ink);
+    drawText(ctx, look, ink, text, top + swatchH + gap);
+  } else {
+    const textTop = contentBottom - text.height;
+    drawText(ctx, look, ink, text, textTop);
+    const box = { x: 110, y: contentTop, w: W - 220, h: Math.max(220, textTop - 40 - contentTop) };
+    if (style === 'luxe') {
+      if (bullet && kase) drawLuxe(ctx, bullet, kase, caseKey, hex, box);
+      else fallbackSwatch(ctx, hex, box, ink);
+    } else if (kiss) {
+      const r = fitRect(kiss.naturalWidth, kiss.naturalHeight, { x: box.x + 20, y: box.y, w: box.w - 40, h: box.h });
+      ctx.drawImage(tintKiss(kiss, hex), r.x, r.y, r.w, r.h);
+    } else fallbackSwatch(ctx, hex, box, ink);
   }
 
-  let y = top + 400;
-  ctx.fillStyle = CREAM;
-  ctx.font = `600 64px ${SERIF}`;
-  for (const l of wrap(ctx, look.name || 'Untitled look', W - 192, 2)) {
-    y += 70;
-    ctx.fillText(l, 96, y);
-  }
-  ctx.fillStyle = GOLD;
-  ctx.font = `600 22px ${SANS}`;
-  y += 48;
-  ctx.fillText(`LIPSTICK  ·  ${look.lipstick.hex.toUpperCase()}  ·  ${look.lipstick.finish.toUpperCase()}`, 96, y);
-  if (look.mood) {
-    ctx.fillStyle = MAUVE;
-    ctx.font = `italic 36px ${SERIF}`;
-    for (const l of wrap(ctx, `Mood: ${look.mood}`, W - 192, 2)) {
-      y += 50;
-      ctx.fillText(l, 96, y);
-    }
-  }
-  if (look.notes) {
-    ctx.fillStyle = CREAM;
-    ctx.font = `400 28px ${SANS}`;
-    y += 14;
-    for (const l of wrap(ctx, look.notes, W - 192, look.colors.length ? 4 : 7)) {
-      y += 40;
-      ctx.fillText(l, 96, y);
-    }
-  }
-  if (look.colors.length) {
-    const sy = Math.min(y + 40, H - 320);
-    swatchRow(ctx, look.colors, 96, sy, W - 192);
-  }
-  footer(ctx);
-  return toBlob(canvas);
+  centeredFooter(ctx, ink);
+  return { blob: await toBlob(canvas), missingArt };
 }
 
 export async function renderBoardCard(settings: StudioSettings, looks: Look[]): Promise<Blob> {
