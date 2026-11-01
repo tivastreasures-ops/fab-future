@@ -1,3 +1,4 @@
 - [Storage and privacy constraints](creative-principles.md) — The user's prior Android image-storage failure, no sample portraits, and optional identity on exported cards.
 - [Live artifact configuration](artifact-config-merges.md) — Git conflict markers can unregister an app and its workflow; keep configuration parseable during merges.
 - [Share-card artwork](share-card-artwork.md) — User supplies lipstick/kiss art; preserve local export, selected colors, privacy, and honest device-test boundaries.
+- [Result-image safety](result-image-safety.md) — Download retries must not submit paid renders; keep bounded host trust and never log signed image URLs.

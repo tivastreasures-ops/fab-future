@@ -9,6 +9,7 @@ import {
 import { db, friendlyStorageError } from '@/lib/db';
 import type { Look, RenderRecord } from '@/lib/types';
 import { useSaveLook } from './use-studio';
+import { EXPIRED_PREVIEW_MESSAGE, PreviewSessionExpired, expiredPreviewQuery, previewBlob } from '@/lib/preview-download';
 
 export type Phase = 'idle' | 'validating' | 'confirm1' | 'uploading' | 'confirm2' | 'submitting' | 'polling' | 'done' | 'failed' | 'expired';
 export type Mode = 'dry' | 'live';
@@ -192,6 +193,16 @@ export function useRenderFlow(look: Look | null, photo: Blob | null, mode: Mode)
   const job = useGetRenderJob(jobId ?? '', { query: { queryKey: getGetRenderJobQueryKey(jobId ?? ''), enabled: !!jobId && phase === 'polling', refetchInterval: 3000, retry: 1 } });
 
   useEffect(() => {
+    if (phase !== 'polling' || !expiredPreviewQuery(job.error)) return;
+    busy.current = false;
+    setMessage(EXPIRED_PREVIEW_MESSAGE);
+    setPhase('failed');
+    void patchRender({ status: 'error', error: EXPIRED_PREVIEW_MESSAGE });
+    // No upload or render submission: a fresh preview still requires confirmation.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [job.error, phase]);
+
+  useEffect(() => {
     if (phase !== 'polling') return;
     const t = window.setTimeout(() => {
       setPhase((p) => (p === 'polling' ? 'expired' : p));
@@ -211,13 +222,19 @@ export function useRenderFlow(look: Look | null, photo: Blob | null, mode: Mode)
       handled.current = `${d.jobId}:${d.status}`;
       const url = d.resultImageUrl ?? `/api/youcam/jobs/${d.jobId}/image`;
       fetch(url, { credentials: 'include' })
-        .then((r) => (r.ok ? r.blob() : Promise.reject(new Error(`Image fetch ${r.status}`))))
+        .then(previewBlob)
         .then((b) => {
           setResult(b);
           setPhase('done');
           void patchRender({ status: 'success', jobId: d.jobId });
         })
         .catch((e) => {
+          if (e instanceof PreviewSessionExpired) {
+            setMessage(EXPIRED_PREVIEW_MESSAGE);
+            setPhase('failed');
+            void patchRender({ status: 'error', error: EXPIRED_PREVIEW_MESSAGE });
+            return;
+          }
           setMessage(`The rendering finished but the image did not arrive: ${errText(e)}`);
           setPhase('expired');
           // Retry only retrieves this successful task's image; it must not

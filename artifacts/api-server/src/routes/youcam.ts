@@ -1,6 +1,6 @@
 import { Router, type IRouter, type Request, type Response, type NextFunction } from "express";
 import { randomUUID, createHmac, timingSafeEqual } from "node:crypto";
-import { Readable } from "node:stream";
+import { downloadResultImage, ResultImageError } from "../lib/result-image";
 import { logger } from "../lib/logger";
 import {
   GetStudioConfigResponse, ValidateRecipeBody, ValidateRecipeResponse,
@@ -223,33 +223,28 @@ async function refresh(job: Job) {
 router.get("/youcam/jobs/:jobId", async (req, res): Promise<void> => {
   const parsed = GetRenderJobParams.safeParse(req.params);
   const job = parsed.success ? jobs.get(parsed.data.jobId) : undefined;
-  if (!job || job.owner !== owner(req)) { res.status(404).json({ error: "This render session has expired. Your locally saved look is unchanged." }); return; }
+  if (!job || job.owner !== owner(req)) { res.status(404).json({ code: "JOB_EXPIRED", error: "This preview session is no longer available; the server may have restarted. Your saved look is safe. Checking cannot recover it here. A new preview requires a new confirmed render and may use another unit." }); return; }
   await refresh(job);
   res.json(GetRenderJobResponse.parse(output(job)));
 });
 router.get("/youcam/jobs/:jobId/image", async (req, res): Promise<void> => {
   const job = jobs.get(String(req.params.jobId));
   if (!job || job.owner !== owner(req) || job.status !== "success" || !job.downloadUrl) {
-    res.status(404).json({ error: "This preview is not available. Your look is still saved." }); return;
+    res.status(404).json({ code: "JOB_EXPIRED", error: "This preview session is no longer available. Your saved look is safe. A new preview requires a new confirmed render and may use another unit." }); return;
   }
   try {
-    // Only provider-returned URLs can reach here; callers cannot supply URLs.
-    const url = new URL(job.downloadUrl);
-    if (url.protocol !== "https:" || url.username || url.password || url.port ||
-        !/\.(makeupar\.com|perfectcorp\.com|amazonaws\.com|cloudfront\.net)$/.test(url.hostname)) {
-      throw new Error("The provider's image host is not on this server's allowlist.");
-    }
-    const result = await fetch(url, { signal: AbortSignal.timeout(25000), redirect: "error" });
-    const type = result.headers.get("content-type") || "";
-    if (!result.ok || !result.body || !/^image\/(jpeg|png|webp)/.test(type)) throw new Error("The preview could not be downloaded. Please retry downloading this same task.");
-    if (Number(result.headers.get("content-length")) > 15_000_000) throw new Error("The preview exceeds the download safety limit.");
-    res.setHeader("Content-Type", type);
-    let bytes = 0;
-    const stream = Readable.fromWeb(result.body as any);
-    stream.on("data", (chunk: Buffer) => { bytes += chunk.length; if (bytes > 15_000_000) stream.destroy(new Error("Image too large")); });
-    stream.on("error", () => { if (!res.headersSent) res.status(502).end(); else res.destroy(); });
-    res.on("close", () => stream.destroy());
-    stream.pipe(res);
-  } catch (e) { error(res, e, 502); }
+    const image = await downloadResultImage(job.downloadUrl);
+    res.type(image.contentType).send(image.bytes);
+  } catch (e) {
+    const diagnostic = e instanceof ResultImageError ? e.diagnostic : {
+      reason: "DOWNLOAD_NETWORK", host: null, httpStatus: null, contentType: null, redirectReturned: false,
+    };
+    // Do not log the exception: its message/stack may include signed URLs.
+    logger.warn(diagnostic, "YouCam result-image download failed");
+    res.status(502).json({
+      code: diagnostic.reason,
+      error: "The preview image could not be downloaded. Check this same preview again; no new render is needed.",
+    });
+  }
 });
 export default router;
