@@ -182,11 +182,17 @@ Grant access to anyone who needs to review or run it.
 Dry runs are not YouCam renders. Live preview needs a consenting user-provided
 photo, two explicit confirmations, and the configured provider key.
 
-The attached studio illustration is used only as a darkened landing hero.
+The optional owner-supplied studio illustration is used only on the landing page.
 When a portrait is uploaded, the full uncropped frame is previewed and sent
 directly to YouCam only after explicit live confirmation.
 
-The studio illustration is intentionally not bundled. When supplied, use it
-only as mood/palette/composition direction and a dimmed landing hero background
-under a dark scrim. Keep all titles/buttons as live HTML, and keep working
-screens free of illustration backgrounds.
+The studio illustration is intentionally not bundled in the Git repository.
+The local original in `attached_assets/Fabulous_Future_Me_Vanity_Studio_1793474578103.png`
+and its runtime copy at
+`artifacts/fabulous-future-me/public/studio-illustration.png` are ignored by Git.
+The current workspace keeps both files; publishing includes the runtime copy.
+For another checkout, optionally supply that runtime file before building.
+Without it, the app still builds and runs with the plum-and-gold background;
+no import depends on the illustration. The runtime copy is included in a build
+only when supplied, and is never required for drafting, cards, export, or Paint.
+All titles/buttons remain live HTML; working screens have no illustration backgrounds.

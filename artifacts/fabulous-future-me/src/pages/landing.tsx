@@ -6,11 +6,12 @@ import { DEFAULT_SETTINGS, TAGLINE } from '@/lib/types';
 import { Lipstick, Swatch } from '@/components/atelier/motifs';
 import { NamingDialog } from '@/components/atelier/naming-dialog';
 import { CatGuide } from '@/components/atelier/cat-guide';
-import studioArt from '@assets/Fabulous_Future_Me_Vanity_Studio_1793474578103.png';
 import { SEED } from '@/lib/seed';
 import './landing.css';
 
 const RHINE = [[14, 6], [27, 4], [55, 7], [83, 15], [92, 30], [40, 60], [70, 88]];
+// Optional owner-supplied art. A clean checkout works without this untracked file.
+const studioArt = `${import.meta.env.BASE_URL}studio-illustration.png`;
 
 export default function Landing() {
   const { data } = useSettings();
@@ -40,7 +41,7 @@ export default function Landing() {
     <div>
       <section className="room" aria-labelledby="hero-title">
         <div className="room-stage">
-          <img src={studioArt} alt="An illustrated vanity studio at night: drafting table, wardrobe of gowns, lit mirror, and two cats." className="room-art" />
+          <img src={studioArt} alt="An illustrated vanity studio at night: drafting table, wardrobe of gowns, lit mirror, and two cats." className="room-art" onError={(event) => { event.currentTarget.hidden = true; }} />
           {RHINE.map(([x, y], i) => (
             <span key={i} aria-hidden="true" className="rhine" style={{ left: `${x}%`, top: `${y}%`, animationDelay: `${i * 0.5}s` }} />
           ))}

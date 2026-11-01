@@ -59,3 +59,7 @@ Thumbs.db
 .cache/
 .local/
 /generated-artifacts/
+
+# Owner-supplied studio illustration: optional runtime art, never source-controlled.
+Fabulous_Future_Me_Vanity_Studio*.png
+/artifacts/fabulous-future-me/public/studio-illustration.png
