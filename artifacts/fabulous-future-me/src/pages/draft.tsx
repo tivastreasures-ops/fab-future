@@ -174,7 +174,7 @@ export default function Draft() {
         <aside className="lg:sticky lg:top-24 grid gap-4">
           <div className="velvet on-dark gold-frame-dark rounded-3xl p-6 text-center">
             <p className="eyebrow">On the vanity</p>
-            <Lipstick hex={hex} finish={finish} className="mx-auto mt-4 h-48 w-24" />
+            <Lipstick hex={hex} finish={finish} className="mx-auto mt-4 h-48 w-36" />
             <p className="font-display text-2xl mt-4 break-words" data-testid="text-preview-name">{name || 'Untitled look'}</p>
             <p className="italic text-mauve">{mood || 'mood to be decided'}</p>
             <p className="mt-2 inline-block rounded-full px-3 py-1 font-mono text-sm" style={{ background: hex, color: inkOn(hex) }} data-testid="text-preview-hex">{hex} · {finish}</p>

@@ -1,6 +1,7 @@
 import { cn } from '@/lib/utils';
 import { inkOn } from '@/lib/color';
 import type { Finish } from '@/lib/types';
+export { Lipstick } from './lipstick-art';
 
 export function CatMark({ className }: { className?: string }) {
   return (
@@ -44,19 +45,6 @@ const FINISH_OVERLAY: Record<Finish, string> = {
 
 export function finishOverlay(f: Finish) {
   return FINISH_OVERLAY[f];
-}
-
-/** A CSS-built lipstick bullet in a gold case. */
-export function Lipstick({ hex, finish, className }: { hex: string; finish: Finish; className?: string }) {
-  return (
-    <div className={cn('relative flex flex-col items-center', className)} aria-hidden="true">
-      <div className="relative w-[46%] aspect-[1/1.45] overflow-hidden" style={{ background: hex, borderRadius: '50% 50% 6px 6px / 70% 30% 6px 6px', clipPath: 'polygon(0 30%, 100% 0, 100% 100%, 0 100%)', transition: 'background 0.35s ease' }}>
-        <div className="absolute inset-0" style={{ background: FINISH_OVERLAY[finish] }} />
-      </div>
-      <div className="w-[56%] h-[14%] rounded-sm" style={{ background: 'linear-gradient(90deg,#8a6526,#e9c77b 35%,#b8893a 60%,#f2d79a 80%,#8a6526)' }} />
-      <div className="w-[64%] h-[40%] rounded-b-md" style={{ background: 'linear-gradient(90deg,#2b0f2a,#5a2558 40%,#3b1639 70%,#1f0b1e)', borderTop: '2px solid #d2a85a' }} />
-    </div>
-  );
 }
 
 export function Swatch({ hex, size = 44, label, className }: { hex: string; size?: number; label?: boolean; className?: string }) {

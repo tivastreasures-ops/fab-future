@@ -107,7 +107,7 @@ export default function Landing() {
       <section className="mx-auto max-w-6xl px-4 sm:px-5 pb-16" aria-labelledby="seed-h">
         <div className="grid gap-6 md:grid-cols-[1fr_1.4fr] items-center rounded-3xl bg-card gold-frame p-6 sm:p-10">
           <div className="flex items-end justify-center h-60">
-            <Lipstick hex={SEED.hex} finish={SEED.finish} className="h-56 w-28" />
+            <Lipstick hex={SEED.hex} finish={SEED.finish} className="h-56 w-40" />
           </div>
           <div>
             <p className="text-sm font-semibold text-[hsl(36_72%_28%)]">A look to begin with</p>

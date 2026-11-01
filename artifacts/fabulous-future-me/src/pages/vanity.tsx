@@ -113,7 +113,7 @@ export default function Vanity() {
           <h2 id="mirror-h" className="text-2xl">The mirror</h2>
           {look ? (
             <div className="flex items-center gap-4">
-              <Lipstick hex={look.lipstick.hex} finish={look.lipstick.finish} className="h-28 w-14" />
+              <Lipstick hex={look.lipstick.hex} finish={look.lipstick.finish} className="h-28 w-20" />
               <div>
                 <p className="font-display text-2xl">{look.name}</p>
                 <p className="inline-block mt-1 rounded-full px-3 py-0.5 font-mono text-sm" style={{ background: look.lipstick.hex, color: inkOn(look.lipstick.hex) }}>{look.lipstick.hex} · {look.lipstick.finish}</p>
