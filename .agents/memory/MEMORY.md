@@ -1,1 +1,2 @@
 - [Storage and privacy constraints](creative-principles.md) — The user's prior Android image-storage failure, no sample portraits, and optional identity on exported cards.
+- [Live artifact configuration](artifact-config-merges.md) — Git conflict markers can unregister an app and its workflow; keep configuration parseable during merges.
