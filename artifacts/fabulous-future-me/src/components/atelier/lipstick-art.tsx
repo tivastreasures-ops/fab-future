@@ -36,9 +36,10 @@ export function Lipstick({ hex, finish, className }: { hex: string; finish: Fini
         const ox = (target.width - cw * scale) / 2;
         const oy = (target.height - (ch - minY) * scale) / 2 - minY * scale;
         ctx.clearRect(0, 0, target.width, target.height);
+        ctx.drawImage(kase, ox, oy, cw * scale, ch * scale);
+        // The supplied case has an opaque opening: the bullet must sit in front.
         ctx.drawImage(tintBullet(bullet, hex), src.sx, src.sy, src.sw, src.sh,
           ox + bx * scale, oy + by * scale, bw * scale, bh * scale);
-        ctx.drawImage(kase, ox, oy, cw * scale, ch * scale);
         setReadyHex(hex);
       } catch {
         if (!cancelled) {

@@ -19,9 +19,9 @@ export const ART_TIMEOUT_MS = 6000;
  * Case / bullet alignment, profiled from the actual supplied artwork (files differ
  * in size, so no shared-canvas assumption). All case values are normalized to the
  * case image: openCx = horizontal center of the opening, openY = vertical position
- * of the opening rim, openW = opening width. The bullet is drawn BEHIND the case;
- * its base sinks slightly into the opening (the opaque dark interior hides it) and
- * the tinted body protrudes upward.
+ * of the opening rim, openW = opening width. The bullet is drawn IN FRONT of the
+ * case because the supplied opening is opaque; its base overlaps the opening
+ * slightly and the tinted body protrudes upward.
  */
 export interface CaseProfile { width: number; height: number; openCx: number; openY: number; openW: number }
 export const CASE_PROFILES: Record<'caseOrnate' | 'caseSimple', CaseProfile> = {

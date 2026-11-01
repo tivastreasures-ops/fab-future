@@ -25,3 +25,11 @@ said Simple is fine as it is.
 
 **How to apply:** Do not treat changes to the shared in-app lipstick illustration
 as permission to redesign share-card styles.
+
+Draw the tinted bullet in front of the case, including Luxe.
+
+**Why:** The user corrected the layering in all instances: “The lipstick bullet
+needs to sit in front of the vase.”
+
+**How to apply:** Keep the selected-color tint and artwork intact; preserve this
+layering when changing either case variant or the in-app composition.

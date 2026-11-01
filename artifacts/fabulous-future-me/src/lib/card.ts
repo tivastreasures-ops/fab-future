@@ -347,8 +347,9 @@ function drawLuxe(ctx: CanvasRenderingContext2D, bullet: HTMLImageElement, kase:
   ctx.shadowColor = 'rgba(0,0,0,0.3)';
   ctx.shadowBlur = 30;
   ctx.shadowOffsetY = 14;
-  ctx.drawImage(tintBullet(bullet, hex), src.sx, src.sy, src.sw, src.sh, ox + bx * s, oy + by * s, bw * s, bh * s);
   ctx.drawImage(kase, ox, oy, cw * s, ch * s);
+  // Match the in-app illustration: bullet in front of the opaque case opening.
+  ctx.drawImage(tintBullet(bullet, hex), src.sx, src.sy, src.sw, src.sh, ox + bx * s, oy + by * s, bw * s, bh * s);
   ctx.restore();
 }
 
