@@ -132,9 +132,65 @@ test('records upstream status and normalized MIME, not signed URL/error body', a
   });
 });
 test('enforces image content-type, including missing and deceptive values', async () => {
-  for (const type of ['', 'text/html', 'image/png-evil', 'application/octet-stream']) {
+  for (const type of ['', 'text/html', 'image/png-evil', 'application/zip']) {
     await failure('CONTENT_TYPE', source, fixture([{ headers: { 'content-type': type } }]));
   }
+});
+test('generic binary headers require PNG, JPEG or WebP signatures and return correct MIME', async () => {
+  const images = [
+    { type: 'image/png', bytes: Buffer.from([137, 80, 78, 71, 13, 10, 26, 10, 1, 2]) },
+    { type: 'image/jpeg', bytes: Buffer.from([0xff, 0xd8, 0xff, 0xe0, 1, 2]) },
+    { type: 'image/webp', bytes: Buffer.concat([Buffer.from('RIFF'), Buffer.from([4, 0, 0, 0]), Buffer.from('WEBPVP8 ')]) },
+  ];
+  for (const header of ['binary/octet-stream', 'application/octet-stream', 'Application/Octet-Stream; charset=binary']) {
+    for (const image of images) {
+      // Split the signature between chunks so verification cannot rely on the
+      // first network packet containing the entire signature.
+      const f = fixture([{ headers: { 'content-type': header },
+        chunks: [image.bytes.subarray(0, 2), image.bytes.subarray(2)] }]);
+      const result = await downloadResultImage(source, f.deps);
+      assert.equal(result.contentType, image.type);
+      assert.deepEqual(result.bytes, image.bytes);
+      assert.equal(f.closed(), 1);
+    }
+  }
+});
+test('generic binary headers reject HTML, ZIP, unknown or incomplete signatures', async () => {
+  const invalid = [
+    Buffer.from('<!doctype html><html>Error</html>'),
+    Buffer.from(' \n<html>Access denied</html>'),
+    Buffer.from([0x50, 0x4b, 0x03, 0x04, 1, 2]),
+    Buffer.from('unknown binary data'),
+    Buffer.from([137, 80, 78, 71]), // Incomplete PNG.
+    Buffer.from([0xff, 0xd8]), // Incomplete JPEG.
+    Buffer.from('RIFF1234WAVE'), // RIFF alone is not WebP.
+    Buffer.from('RIFF1234WEB'), // Incomplete WebP.
+    Buffer.from([0xd2, 0x49, 0x46, 0x46, 0, 0, 0, 0, 0x57, 0x45, 0x42, 0x50]), // Must compare exact bytes.
+    Buffer.from('prefix\xff\xd8\xff'), // Image signature must start at byte zero.
+  ];
+  for (const type of ['binary/octet-stream', 'application/octet-stream']) {
+    for (const bytes of invalid) {
+      const f = fixture([{ headers: { 'content-type': type }, chunks: [bytes] }]);
+      const error = await failure('IMAGE_SIGNATURE_INVALID', source, f);
+      assert.equal(error.diagnostic.contentType, type);
+      assert.equal(f.closed(), 1);
+    }
+    await failure('EMPTY_IMAGE', source, fixture([{ headers: { 'content-type': type }, chunks: [] }]));
+  }
+});
+test('generic binary bodies retain size, upstream status and redirect protections', async () => {
+  const headers = { 'content-type': 'binary/octet-stream' };
+  await failure('SIZE_LIMIT', source, fixture([{ headers: { ...headers, 'content-length': String(IMAGE_LIMIT + 1) } }]));
+  await failure('SIZE_LIMIT', source, fixture([{ headers, chunks: [Buffer.alloc(IMAGE_LIMIT + 1)] }]));
+  await failure('UPSTREAM_HTTP', source, fixture([{ status: 403, headers }]));
+  const png = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]);
+  const f = fixture([
+    { status: 302, headers: { location: '/signed-image' } },
+    { headers, chunks: [png] },
+  ]);
+  const result = await downloadResultImage(source, f.deps);
+  assert.equal(result.contentType, 'image/png');
+  assert.equal(f.requests.length, 2);
 });
 test('enforces declared size and streamed size without trusting Content-Length', async () => {
   await failure('SIZE_LIMIT', source, fixture([{ headers: { 'content-length': String(IMAGE_LIMIT + 1) } }]));
@@ -168,6 +224,9 @@ test('frontend exposes only allowlisted reason code and retries download indepen
   }
   await assert.rejects(previewBlob(new Response(source, { status: 502 })), /DOWNLOAD_UNAVAILABLE/);
   await assert.rejects(previewBlob(new Response(JSON.stringify({ code: source }), { status: 502 })), /DOWNLOAD_UNAVAILABLE/);
+  await assert.rejects(previewBlob(new Response(JSON.stringify({
+    code: 'IMAGE_SIGNATURE_INVALID', error: source,
+  }), { status: 502 })), /IMAGE_SIGNATURE_INVALID/);
   assert.equal(await (await previewBlob(new Response('image'))).text(), 'image');
 });
 test('expired server jobs get clear recovery handling, never an automatic render', async () => {

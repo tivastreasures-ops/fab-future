@@ -18,3 +18,14 @@ authenticated task's exact result host and provider-owned domains, validate
 public addresses per hop, and never log signed URLs, raw exception stacks from
 network requests, image bytes, or credentials. Do not claim the historical cause
 was proven from generic HTTP 502 logs.
+
+YouCam's production result storage has returned HTTP 200 with
+`binary/octet-stream` from `yce-us.s3-accelerate.amazonaws.com`.
+
+**Why:** A subsequent live task reached the downloader but was rejected solely
+by its generic content-type header; the earlier unexplained 502 remains a
+separate, unproven cause.
+
+**How to apply:** Do not assume a generic binary header means an error document
+or a valid image. Require a supported image signature within the bounded body;
+do not relax host trust, size limits, or paid-render safeguards to accommodate it.

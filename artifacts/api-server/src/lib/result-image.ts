@@ -6,7 +6,7 @@ export const IMAGE_LIMIT = 15_000_000;
 const REDIRECTS = new Set([301, 302, 303, 307, 308]);
 export type ImageReason = 'INVALID_URL' | 'HTTPS_REQUIRED' | 'HOST_NOT_ALLOWED' |
   'PRIVATE_ADDRESS' | 'DNS_FAILED' | 'REDIRECT_LIMIT' | 'REDIRECT_INVALID' |
-  'UPSTREAM_HTTP' | 'CONTENT_TYPE' | 'SIZE_LIMIT' | 'EMPTY_IMAGE' |
+  'UPSTREAM_HTTP' | 'CONTENT_TYPE' | 'SIZE_LIMIT' | 'EMPTY_IMAGE' | 'IMAGE_SIGNATURE_INVALID' |
   'DOWNLOAD_TIMEOUT' | 'DOWNLOAD_NETWORK';
 export interface ImageDiagnostic {
   reason: ImageReason;
@@ -80,6 +80,17 @@ const defaults: Dependencies = {
   }),
 };
 
+/** Magic bytes identify supported images, not arbitrary generic binary bodies.
+ * This is a format-signature check, not a full image decoder.
+ */
+function signedImageType(bytes: Buffer): string | null {
+  if (bytes.length >= 8 && bytes.subarray(0, 8).equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]))) return 'image/png';
+  if (bytes.length >= 3 && bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff) return 'image/jpeg';
+  if (bytes.length >= 12 && bytes.subarray(0, 4).equals(Buffer.from('RIFF')) &&
+      bytes.subarray(8, 12).equals(Buffer.from('WEBP'))) return 'image/webp';
+  return null;
+}
+
 /**
  * Only call with the URL saved from the authenticated provider task response,
  * NEVER a client-supplied URL. Trust that exact public host plus vendor domains;
@@ -137,7 +148,8 @@ export async function downloadResultImage(providerUrl: string, injected: Partial
           continue;
         }
         if (response.status < 200 || response.status >= 300) fail('UPSTREAM_HTTP');
-        if (!/^image\/(?:jpeg|png|webp)(?:;|$)/.test(type)) fail('CONTENT_TYPE');
+        const genericBinary = /^(?:binary|application)\/octet-stream(?:;|$)/.test(type);
+        if (!genericBinary && !/^image\/(?:jpeg|png|webp)(?:;|$)/.test(type)) fail('CONTENT_TYPE');
         if (Number(response.headers['content-length']) > IMAGE_LIMIT) fail('SIZE_LIMIT');
         const chunks: Buffer[] = [];
         let size = 0;
@@ -147,7 +159,12 @@ export async function downloadResultImage(providerUrl: string, injected: Partial
           chunks.push(Buffer.from(chunk));
         }
         if (!size) fail('EMPTY_IMAGE');
-        return { bytes: Buffer.concat(chunks), contentType: type.split(';')[0] };
+        const bytes = Buffer.concat(chunks);
+        // Generic storage headers are allowed only when the bounded body starts
+        // with a supported image signature. Never trust a filename or URL suffix.
+        const contentType = genericBinary ? signedImageType(bytes) : type.split(';')[0];
+        if (!contentType) return fail('IMAGE_SIGNATURE_INVALID');
+        return { bytes, contentType };
       } finally { response.close(); }
     }
   } catch (e) {
