@@ -22,4 +22,9 @@ timeoutMs = 20000
 [userenv]
 
 [userenv.shared]
+
+[userenv.development]
 DRY_RUN = "true"
+
+[userenv.production]
+DRY_RUN = "false"
