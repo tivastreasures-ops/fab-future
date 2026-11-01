@@ -12,7 +12,7 @@ import { useSaveLook } from './use-studio';
 
 export type Phase = 'idle' | 'validating' | 'confirm1' | 'uploading' | 'confirm2' | 'submitting' | 'polling' | 'done' | 'failed' | 'expired';
 export type Mode = 'dry' | 'live';
-const POLL_LIMIT_MS = 180_000;
+const POLL_LIMIT_MS = 90_000;
 
 function rid() {
   return typeof crypto !== 'undefined' && 'randomUUID' in crypto ? crypto.randomUUID() : `req-${Date.now()}-${Math.random().toString(36).slice(2, 12)}`;
@@ -41,6 +41,24 @@ export function useRenderFlow(look: Look | null, photo: Blob | null, mode: Mode)
   const busy = useRef(false);
   const lookIdRef = useRef<string | null>(null);
   const pollStart = useRef(0);
+  const startedFor = useRef<string | null>(null);
+  const handled = useRef<string | null>(null);
+
+  // Reopening a saved, unfinished preview checks its existing task, never submits
+  // another paid render. This runs once per selected look, not after our timeout.
+  useEffect(() => {
+    const render = look?.render;
+    if (!look || startedFor.current === look.id || render?.mode !== 'live' ||
+        !render.jobId || !['pending', 'timeout'].includes(render.status)) return;
+    startedFor.current = look.id;
+    lookIdRef.current = look.id;
+    busy.current = true;
+    handled.current = null;
+    pollStart.current = Date.now();
+    setJobId(render.jobId);
+    setMessage('Checking your existing preview. No new render is being submitted.');
+    setPhase('polling');
+  }, [look?.id, look?.render?.jobId, look?.render?.mode, look?.render?.status]);
 
   /** Merge into the stored render record only. User selections (lipstick, name...) are never replaced. */
   const patchRender = async (patch: Partial<RenderRecord>) => {
@@ -68,6 +86,17 @@ export function useRenderFlow(look: Look | null, photo: Blob | null, mode: Mode)
 
   const begin = async () => {
     if (!look || busy.current) return;
+    startedFor.current = look.id;
+    if (look.render?.mode === 'live' && look.render.jobId && ['pending', 'timeout'].includes(look.render.status)) {
+      lookIdRef.current = look.id;
+      busy.current = true;
+      handled.current = null;
+      pollStart.current = Date.now();
+      setJobId(look.render.jobId);
+      setMessage('Checking your existing preview. No new render is being submitted.');
+      setPhase('polling');
+      return;
+    }
     if (mode === 'live' && !photo) {
       setMessage('Add a photo first — the live preview needs one.');
       return;
@@ -105,6 +134,7 @@ export function useRenderFlow(look: Look | null, photo: Blob | null, mode: Mode)
     setPhase('submitting');
     try {
       const job = await create.mutateAsync({ data: { hex: look.lipstick.hex, finish: look.lipstick.finish, sourceFileId: fileId, expectedPayload, liveConfirmed: live, requestId: rid() } });
+      setJobId(job.jobId);
       await patchRender({ submittedPayload: job.payload ?? expectedPayload, jobId: job.jobId, status: job.status === 'dry_run' ? 'dry_run' : job.status === 'success' ? 'success' : job.status === 'pending' ? 'pending' : job.status, error: job.error });
       if (job.status === 'dry_run') {
         setDryJob(job as unknown as Record<string, unknown>);
@@ -166,13 +196,14 @@ export function useRenderFlow(look: Look | null, photo: Blob | null, mode: Mode)
     const t = window.setTimeout(() => {
       setPhase((p) => (p === 'polling' ? 'expired' : p));
       busy.current = false;
-      void patchRender({ status: 'timeout', error: 'Stopped waiting after 3 minutes.' });
+      const note = 'YouCam is taking longer than expected. Your look is saved. Check this same preview again before starting another; a timeout does not cancel its task.';
+      setMessage(note);
+      void patchRender({ status: 'timeout', error: note });
     }, Math.max(0, POLL_LIMIT_MS - (Date.now() - pollStart.current)));
     return () => window.clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phase]);
 
-  const handled = useRef<string | null>(null);
   useEffect(() => {
     const d = job.data;
     if (!d || phase !== 'polling' || handled.current === `${d.jobId}:${d.status}`) return;
@@ -188,15 +219,17 @@ export function useRenderFlow(look: Look | null, photo: Blob | null, mode: Mode)
         })
         .catch((e) => {
           setMessage(`The rendering finished but the image did not arrive: ${errText(e)}`);
-          setPhase('failed');
-          void patchRender({ status: 'error', error: errText(e) });
+          setPhase('expired');
+          // Retry only retrieves this successful task's image; it must not
+          // prepare a second paid render after a download interruption.
+          void patchRender({ status: 'pending', jobId: d.jobId, error: 'The rendering finished, but its image still needs to be downloaded.' });
         })
         .finally(() => { busy.current = false; });
     } else if (d.status === 'error' || d.status === 'timeout') {
       handled.current = `${d.jobId}:${d.status}`;
       busy.current = false;
       setMessage(d.error ?? 'The rendering did not come back this time.');
-      setPhase('failed');
+      setPhase(d.status === 'timeout' ? 'expired' : 'failed');
       void patchRender({ status: d.status, error: d.error });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -205,6 +238,7 @@ export function useRenderFlow(look: Look | null, photo: Blob | null, mode: Mode)
   const keepWaiting = () => {
     if (!jobId) return;
     busy.current = true;
+    handled.current = null;
     pollStart.current = Date.now();
     void patchRender({ status: 'pending', error: undefined });
     setPhase('polling');

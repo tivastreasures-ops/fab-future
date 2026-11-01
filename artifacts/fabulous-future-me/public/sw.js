@@ -1,4 +1,4 @@
-/* Fabulous Future Me offline atelier shell.
+/* Fabulous Future Me offline studio shell.
  * Caches the app shell, built assets, and Vite dev modules (same-origin GET only).
  * Never caches API calls, uploads, signed URLs, or cross-origin requests. */
 const CACHE = 'ffm-shell-v1';
@@ -44,7 +44,7 @@ self.addEventListener('fetch', (event) => {
         })
         .catch(async () => {
           const cache = await caches.open(CACHE);
-          return (await cache.match(SHELL_URL)) || (await cache.match(request)) || new Response('<h1>Offline</h1><p>The atelier will open once you reconnect.</p>', { headers: { 'Content-Type': 'text/html' } });
+          return (await cache.match(SHELL_URL)) || (await cache.match(request)) || new Response('<h1>Offline</h1><p>Your studio will open once you reconnect.</p>', { headers: { 'Content-Type': 'text/html' } });
         }),
     );
     return;

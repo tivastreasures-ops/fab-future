@@ -10,8 +10,8 @@ A personal creative playground for imagining lipstick looks, saving possible sel
 - `PORT=5173 BASE_PATH=/ pnpm --filter @workspace/fabulous-future-me run build` — build the web app
 - `pnpm run build` — typecheck + build all packages
 - `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from the OpenAPI spec
-- Optional server secrets for YouCam live try-on: `YouCam_Key` or `YOUCAM_API_KEY`; `SESSION_SECRET` signs short-lived browser session cookies.
-- `DRY_RUN=true` hard-disables live uploads and rendering.
+- Optional server secrets for YouCam live lipstick previews: `YouCam_Key` or `YOUCAM_API_KEY`; `SESSION_SECRET` signs short-lived browser session cookies.
+- Dry-run is the default. `DRY_RUN=true` hard-disables every upstream YouCam request; only explicit `DRY_RUN=false` can enable live requests.
 
 ## Stack
 
@@ -46,7 +46,8 @@ Design custom-color lipstick looks; save and edit them offline; create PNGs with
 ## User preferences
 
 - Inform the user; never overrule the artist. Allow all valid colors. No beauty assessments, flaw-correction language, store, public social feed, or non-lipstick makeup.
-- The supplied studio illustration belongs on the darkened landing hero only; functional text stays live HTML.
+- The supplied studio illustration is shown brightly on the landing screen, with detail crops for its destinations. Use small plaques for text contrast, not a heavy global scrim. Working screens stay clean; functional text stays live HTML.
+- The three zone labels are Imagine, Paint, and Collect. Use the supplied cat poses on cream panels; keep their rhinestone details.
 - Use approachable, imaginative US English in user-facing copy. Avoid “atelier”; keep the plum-and-gold styling and the bottom navigation label “Studio”.
 
 ## Gotchas

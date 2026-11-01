@@ -55,7 +55,7 @@ export default function Settings() {
           <div className="velvet on-dark gold-frame-dark rounded-2xl p-5 text-center" aria-live="polite">
             <CatMark className="mx-auto h-6 w-6 text-gold" />
             <p className="font-display text-3xl mt-2 break-words" data-testid="text-settings-title-preview">{title.trim() || 'My Lookbook'}</p>
-            <p className="text-mauve text-sm">{name.trim() ? `made by ${name.trim()}` : 'made by me'}</p>
+            <p className="text-mauve text-sm">made by me</p>
           </div>
           <label className="grid gap-1 text-sm font-medium">Display name
             <input className="field" value={name} maxLength={40} onChange={(e) => setName(e.target.value)} placeholder="Optional" data-testid="input-display-name" />

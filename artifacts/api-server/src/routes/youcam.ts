@@ -8,7 +8,7 @@ import {
   GetRenderJobParams, GetRenderJobResponse,
 } from "@workspace/api-zod";
 import { buildPayload, assertExactPayload, UNUPLOADED } from "../lib/youcam-recipe";
-import { dryRunEnabled, hasYouCamKey, liveAllowed, youcam } from "../lib/youcam-client";
+import { dryRunEnabled, hasYouCamKey, liveAllowed, youcam, YouCamApiError } from "../lib/youcam-client";
 
 const router: IRouter = Router();
 type Job = {
@@ -173,8 +173,12 @@ router.post("/youcam/render", async (req, res): Promise<void> => {
         if (typeof result.data?.task_id !== "string") throw new Error("YouCam did not return a task ID. Check your console before retrying.");
         job.taskId = result.data.task_id;
       } catch (e) {
-        job.status = "error";
-        job.error = `${e instanceof Error ? e.message : "The render connection failed."} If the connection timed out, check the YouCam console before retrying; the provider may still be processing it.`;
+        // A lost submission response is ambiguous: keep it pending so a new
+        // request cannot charge again. Only an explicit provider rejection ends it.
+        const rejected = e instanceof YouCamApiError && e.confirmedRejection;
+        job.status = rejected ? "error" : "pending";
+        job.error = rejected ? e.message :
+          "We couldn't confirm the provider's response. Your look is saved. No extra render will be submitted; check the YouCam console because the task may still be processing.";
       }
     }
     jobs.set(job.jobId, job);
@@ -201,11 +205,11 @@ async function refresh(job: Job) {
         if (typeof url !== "string" || !url.startsWith("https://")) throw new Error("YouCam returned no downloadable result.");
         job.status = "success"; job.downloadUrl = url; job.error = undefined;
       } else if (data?.task_status === "error") {
-        logger.error({ taskId: job.taskId, providerBody: JSON.stringify(data).slice(0, 16000) }, "YouCam rendering task failed");
+        logger.error({ taskId: job.taskId, providerBody: JSON.stringify(data ?? null).slice(0, 16000) }, "YouCam rendering task failed");
         job.status = "error";
         job.error = "YouCam couldn't render this photo. Your look is saved. Try good light with your entire face centered, then retry.";
       } else if (data?.task_status !== "running") {
-        logger.error({ taskId: job.taskId, providerBody: JSON.stringify(data).slice(0, 16000) }, "YouCam returned an unexpected task status");
+        logger.error({ taskId: job.taskId, providerBody: JSON.stringify(data ?? null).slice(0, 16000) }, "YouCam returned an unexpected task status");
         job.error = "The preview status is not available yet. Your look is saved; check this same preview again before starting another.";
       }
     } catch {

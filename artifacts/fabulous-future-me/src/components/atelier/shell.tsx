@@ -6,7 +6,7 @@ import { CatMark } from './motifs';
 
 const NAV = [
   { href: '/draft', label: 'Imagine', icon: Palette },
-  { href: '/vanity', label: 'Try On', icon: Sparkles },
+  { href: '/vanity', label: 'Paint', icon: Sparkles },
   { href: '/wardrobe', label: 'Collect', icon: BookHeart },
   { href: '/settings', label: 'Studio', icon: Settings2 },
 ];

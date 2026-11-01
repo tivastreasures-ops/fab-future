@@ -13,7 +13,8 @@ import { cn } from '@/lib/utils';
 import { PageHeading } from '@/components/atelier/shell';
 import { ExportDialog } from '@/components/atelier/export-dialog';
 import { CardViewer } from '@/components/atelier/card-viewer';
-import { SleepingCat, Swatch, finishOverlay } from '@/components/atelier/motifs';
+import { Swatch, finishOverlay } from '@/components/atelier/motifs';
+import { CatGuide } from '@/components/atelier/cat-guide';
 
 const STATUS: Record<string, string> = { saved: 'Saved', dry_run: 'Simulated', pending: 'Rendering', success: 'Rendered', error: 'Render failed', timeout: 'Timed out' };
 
@@ -37,7 +38,7 @@ function LookCard({ look, onExport, onDelete }: { look: Look; onExport: () => vo
         {look.colors.length ? <div className="flex flex-wrap gap-1.5">{look.colors.map((c, i) => <Swatch key={`${c}${i}`} hex={c} size={24} />)}</div> : null}
         <div className="mt-auto pt-3 grid grid-cols-2 gap-2">
           <button type="button" className="btn-quiet text-sm" onClick={() => navigate(`/draft?id=${look.id}`)} data-testid={`button-edit-${look.id}`}><Pencil className="h-4 w-4" aria-hidden="true" />Edit</button>
-          <button type="button" className="btn-quiet text-sm" onClick={() => navigate(`/vanity?id=${look.id}`)} data-testid={`button-tryon-${look.id}`}><Sparkles className="h-4 w-4" aria-hidden="true" />Try on</button>
+          <button type="button" className="btn-quiet text-sm" onClick={() => navigate(`/vanity?id=${look.id}`)} data-testid={`button-paint-${look.id}`}><Sparkles className="h-4 w-4" aria-hidden="true" />Paint</button>
           <button type="button" className="btn-quiet text-sm" onClick={onExport} data-testid={`button-export-${look.id}`}><Download className="h-4 w-4" aria-hidden="true" />Card</button>
           <button type="button" className="btn-quiet text-sm text-destructive" onClick={onDelete} data-testid={`button-delete-${look.id}`}><Trash2 className="h-4 w-4" aria-hidden="true" />Delete</button>
         </div>
@@ -105,7 +106,7 @@ export default function Wardrobe() {
           </ul>
         ) : (
           <div className="rounded-3xl bg-card gold-frame p-10 text-center">
-            <SleepingCat className="mx-auto h-24 text-gold-ink" />
+            <CatGuide pose="sleeping" className="mx-auto max-w-sm text-left" />
             <h2 className="text-3xl text-plum mt-4">An empty rail, full of possibility</h2>
             <p className="text-muted-foreground mt-2">Your first look will hang right here.</p>
             <Link href="/draft" className="btn-couture mt-6" data-testid="link-empty-start">Start a Look</Link>
@@ -122,7 +123,7 @@ export default function Wardrobe() {
               <ul className="mt-5 grid grid-cols-4 sm:grid-cols-8 gap-3">
                 {allColors.map((c) => <li key={c} className="aspect-square rounded-2xl border border-gold flex items-end p-1.5 font-mono text-[10px]" style={{ background: c, color: inkOn(c) }}>{c}</li>)}
               </ul>
-            ) : <p className="mt-4 text-mauve">Colours from your looks will gather here.</p>}
+            ) : <p className="mt-4 text-mauve">Colors from your looks will gather here.</p>}
           </section>
           <section>
             <h2 className="text-2xl text-plum mb-3">Saved cards</h2>

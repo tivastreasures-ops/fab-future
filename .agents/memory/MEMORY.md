@@ -1,1 +1,1 @@
-- [Creative studio principles](creative-principles.md) — User-defined product boundaries, art placement, portrait privacy, and Android export priorities.
+- [Storage and privacy constraints](creative-principles.md) — The user's prior Android image-storage failure, no sample portraits, and optional identity on exported cards.

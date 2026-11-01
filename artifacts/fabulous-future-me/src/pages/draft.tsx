@@ -13,6 +13,7 @@ import { ColorStudio } from '@/components/atelier/color-studio';
 import { Lipstick, finishOverlay } from '@/components/atelier/motifs';
 import { ReferencePicker, type RefItem } from '@/components/atelier/reference-picker';
 import { SEED } from '@/lib/seed';
+import { CatGuide } from '@/components/atelier/cat-guide';
 
 export default function Draft() {
   const params = new URLSearchParams(useSearch());
@@ -36,7 +37,10 @@ export default function Draft() {
   const [removed, setRemoved] = useState<string[]>([]);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [savedOnce, setSavedOnce] = useState(false);
+  const [celebrating, setCelebrating] = useState(false);
+  const celebrationTimer = useRef<number | null>(null);
   const initFor = useRef<string | null>(null);
+  useEffect(() => () => { if (celebrationTimer.current !== null) window.clearTimeout(celebrationTimer.current); }, []);
 
   useEffect(() => {
     if (existing && initFor.current !== existing.id) {
@@ -67,6 +71,7 @@ export default function Draft() {
   };
 
   const save = async (then?: 'vanity') => {
+    if (celebrating || saveLook.isPending) return;
     setSaveError(null);
     const look: Look = {
       id,
@@ -87,9 +92,12 @@ export default function Draft() {
       setRemoved([]);
       setRefs((rs) => rs.map((r) => ({ id: r.id })));
       setSavedOnce(true);
-      toast({ title: 'Tucked into your wardrobe', description: `"${look.name}" is saved on this device.` });
-      if (then) navigate(`/vanity?id=${id}`);
-      else if (!editId) navigate(`/draft?id=${id}`, { replace: true });
+      toast({ title: 'Saved in Collect', description: `"${look.name}" is saved on this device.` });
+      const destination = then ? `/vanity?id=${id}` : !editId ? '/wardrobe' : null;
+      if (destination) {
+        setCelebrating(true);
+        celebrationTimer.current = window.setTimeout(() => navigate(destination), 1100);
+      }
     } catch (e) {
       setSaveError(friendlyStorageError(e));
     }
@@ -111,6 +119,7 @@ export default function Draft() {
       <PageHeading eyebrow="The drafting table" title={editId ? 'Refine this look' : 'Imagine'}>
         Pick a lipstick color and finish, then dress it with a mood. There are no wrong answers.
       </PageHeading>
+      <CatGuide pose="helping" className="mb-6 max-w-lg" />
       <div className="grid gap-6 lg:grid-cols-[1fr_340px] items-start">
         <div className="grid gap-6">
           <section className="rounded-3xl bg-card gold-frame p-5 sm:p-7" aria-labelledby="col-h">
@@ -171,11 +180,19 @@ export default function Draft() {
             <p className="mt-2 inline-block rounded-full px-3 py-1 font-mono text-sm" style={{ background: hex, color: inkOn(hex) }} data-testid="text-preview-hex">{hex} · {finish}</p>
           </div>
           {saveError ? <p role="alert" className="rounded-2xl border-2 border-destructive bg-card p-4 text-sm text-destructive" data-testid="status-save-error">{saveError}</p> : null}
-          <button type="button" className="btn-couture" onClick={() => save()} disabled={saveLook.isPending} data-testid="button-save-look"><Save className="h-4 w-4" aria-hidden="true" />{saveLook.isPending ? 'Saving...' : savedOnce ? 'Save changes' : 'Save look'}</button>
-          <button type="button" className="btn-gold" onClick={() => save('vanity')} disabled={saveLook.isPending} data-testid="button-save-tryon"><Sparkles className="h-4 w-4" aria-hidden="true" />Save and go to the vanity</button>
+          <button type="button" className="btn-couture" onClick={() => save()} disabled={saveLook.isPending || celebrating} data-testid="button-save-look"><Save className="h-4 w-4" aria-hidden="true" />{saveLook.isPending ? 'Saving...' : savedOnce ? 'Save changes' : 'Save look'}</button>
+          <button type="button" className="btn-gold" onClick={() => save('vanity')} disabled={saveLook.isPending || celebrating} data-testid="button-save-paint"><Sparkles className="h-4 w-4" aria-hidden="true" />Save and go to Paint</button>
           <p className="text-xs text-center text-muted-foreground">Saved privately in this browser. No account, no cloud.</p>
         </aside>
       </div>
+      {celebrating ? (
+        <div className="fixed inset-0 z-[70] grid place-items-center bg-plum-deep/20 px-5" role="status" aria-live="polite">
+          <div className="w-full max-w-sm rounded-3xl bg-card gold-frame p-5">
+            <p className="font-display text-2xl text-plum mb-3">Look saved!</p>
+            <CatGuide pose="celebrating" />
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

@@ -13,6 +13,7 @@ import { PhotoPanel } from '@/components/atelier/photo-panel';
 import { PayloadDialog } from '@/components/atelier/payload-dialog';
 import { Lipstick, SleepingCat } from '@/components/atelier/motifs';
 import { useObjectUrl } from '@/hooks/use-studio';
+import { CatGuide } from '@/components/atelier/cat-guide';
 
 const PREVIEW_NOTE = "This preview is YouCam's rendering and may vary from the real product.";
 
@@ -58,7 +59,7 @@ export default function Vanity() {
       <div className="mx-auto max-w-xl px-5 py-16 text-center">
         <SleepingCat className="mx-auto h-24 text-gold-ink" />
         <h1 className="text-3xl text-plum mt-4">The vanity is waiting for a look</h1>
-        <p className="text-muted-foreground mt-2">Draft a lipstick first — then come back to try it on.</p>
+        <p className="text-muted-foreground mt-2">Start with a lipstick color in Imagine, then bring it here to Paint.</p>
         <Link href="/draft" className="btn-couture mt-6" data-testid="link-empty-draft">Go to the drafting table</Link>
       </div>
     );
@@ -66,10 +67,11 @@ export default function Vanity() {
 
   return (
     <div className="mx-auto max-w-6xl px-5 py-8">
-      <PageHeading eyebrow="The vanity" title="Try On">Lipstick only. Your color and finish travel exactly as you chose them.</PageHeading>
+      <PageHeading eyebrow="The vanity" title="Paint">Lipstick only. Your color and finish travel exactly as you chose them.</PageHeading>
 
       <div className="grid gap-6 lg:grid-cols-[1fr_1.1fr]">
         <section className="rounded-3xl bg-card gold-frame p-5 sm:p-6 grid gap-5" aria-labelledby="pick-h">
+          <CatGuide pose="painting" />
           <div>
             <h2 id="pick-h" className="text-2xl text-plum">Which look?</h2>
             <ul className="mt-3 flex gap-3 overflow-x-auto pb-2 snap-x">
@@ -122,7 +124,7 @@ export default function Vanity() {
           {flow.phase === 'uploading' || flow.phase === 'submitting' || flow.phase === 'polling' ? (
             <div className="grid gap-2" role="status">
               <div className="h-2 rounded-full bg-white/10 overflow-hidden"><div className="h-full w-1/3 bg-gold skeleton-silk" /></div>
-              <p>{flow.phase === 'uploading' ? 'Sending your photo securely...' : flow.phase === 'submitting' ? 'Submitting your request...' : 'Your preview is rendering. This can take up to three minutes.'}</p>
+              <p>{flow.phase === 'uploading' ? 'Sending your photo securely...' : flow.phase === 'submitting' ? 'Submitting your request...' : 'Your preview is rendering. We will check for about 90 seconds.'}</p>
             </div>
           ) : null}
 
@@ -150,18 +152,19 @@ export default function Vanity() {
               {flow.message ? <p className="rounded-xl border border-gold/60 bg-white/5 p-3 text-sm text-cream" role="status" data-testid="status-result-save-note">{flow.message}</p> : null}
               <div className="flex flex-wrap gap-2">
                 <button type="button" className="btn-gold" disabled={kept} onClick={async () => { if (await flow.keepResult()) { setKept(true); toast({ title: 'Kept in your wardrobe', description: 'Saved on this device only.' }); } }} data-testid="button-keep-result">{kept ? 'Kept on this device' : 'Keep this rendering'}</button>
-                {look ? <button type="button" className="btn-quiet" onClick={() => navigate('/wardrobe')} data-testid="button-go-wardrobe">Open wardrobe</button> : null}
+                {look ? <button type="button" className="btn-quiet" onClick={() => navigate('/wardrobe')} data-testid="button-go-wardrobe">Open Collect</button> : null}
               </div>
             </div>
           ) : null}
 
           {flow.phase === 'failed' || flow.phase === 'expired' ? (
             <div className="rounded-2xl bg-white/5 border border-gold/60 p-4" role="alert" data-testid="status-render-error">
-              <p className="font-semibold">{flow.phase === 'expired' ? 'Still not back after three minutes.' : 'That did not come through.'}</p>
+              <p className="font-semibold">{flow.phase === 'expired' ? 'This preview needs more time.' : 'That did not come through.'}</p>
               <p className="text-sm text-mauve mt-1">{flow.message ?? 'Your look is safe in the wardrobe.'} Your look is saved either way.</p>
               <div className="mt-3 flex flex-wrap gap-2">
-                {flow.phase === 'expired' ? <button type="button" className="btn-gold" onClick={flow.keepWaiting} data-testid="button-keep-waiting">Keep waiting</button> : null}
-                <button type="button" className="btn-quiet" onClick={flow.reset} data-testid="button-retry-render"><RotateCcw className="h-4 w-4" aria-hidden="true" />Start again</button>
+                {flow.phase === 'expired'
+                  ? <button type="button" className="btn-gold" onClick={flow.keepWaiting} data-testid="button-keep-waiting">Check this same preview</button>
+                  : <button type="button" className="btn-quiet" onClick={flow.reset} data-testid="button-retry-render"><RotateCcw className="h-4 w-4" aria-hidden="true" />Try again</button>}
               </div>
             </div>
           ) : null}

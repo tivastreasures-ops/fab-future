@@ -1,5 +1,9 @@
-const API = "https://yce-api-01.makeupar.com/s2s/v2.0";
 import { logger } from "./logger";
+
+const API = "https://yce-api-01.makeupar.com/s2s/v2.0";
+export class YouCamApiError extends Error {
+  constructor(message: string, readonly confirmedRejection: boolean) { super(message); }
+}
 
 // Accept the user's original Replit Secret name and a normalized deployment name.
 const apiKey = () => process.env.YOUCAM_API_KEY || process.env.YouCam_Key;
@@ -16,6 +20,7 @@ export function liveAllowed() {
 }
 
 export async function youcam(path: string, body?: unknown): Promise<Record<string, any>> {
+  if (dryRunEnabled()) throw new Error("Live YouCam requests are disabled. Your saved look is unchanged.");
   const token = apiKey();
   if (!token) throw new Error("YouCam is not connected yet. Your look is safe; drafting and cards still work.");
   const response = await fetch(`${API}${path}`, {
@@ -37,9 +42,11 @@ export async function youcam(path: string, body?: unknown): Promise<Record<strin
   if (!response.ok || (typeof result.status === "number" && result.status >= 400)) {
     // Log a bounded upstream error body for debugging; never return it to the browser.
     logger.error({ httpStatus: response.status, providerBody: responseBody.slice(0, 16000) }, "YouCam request failed");
-    throw new Error(response.status === 401 ? "YouCam could not authorize this request. Check the server API key." :
+    const status = typeof result.status === "number" && result.status >= 400 ? result.status : response.status;
+    throw new YouCamApiError(response.status === 401 ? "YouCam could not authorize this request. Check the server API key." :
       response.status === 429 ? "YouCam is busy. Your look is saved; please try again shortly." :
-      "YouCam could not complete this request. Your look is saved; please check your photo and available units before retrying.");
+      "YouCam could not complete this request. Your look is saved; please check your photo and available units before retrying.",
+      status >= 400 && status < 500 && status !== 408);
   }
   return result;
 }
