@@ -2,6 +2,14 @@
 
 **Your skin. Your colors. Your rules.**
 
+**Live demo:** https://fab-future-me.replit.app
+
+## What it does
+
+- Virtual lipstick try-on: pick any valid hex shade and a lipstick finish.
+- Optionally send your photo and lipstick settings to YouCam, only after confirmation.
+- Save looks and export Look Cards (Luxe, Simple, Kiss Mark) on your device.
+
 A personal creative playground for designing possible versions of yourself—not a
 cosmetics store, beauty assessment, or flaw-correction tool.
 
@@ -38,13 +46,14 @@ PORT=5173 BASE_PATH=/ pnpm --filter @workspace/fabulous-future-me run build
 ## Creative flow, no API needed
 
 1. Start a Look. Optionally name your studio; skipping uses **My Lookbook**.
-2. At the Drafting Table, choose any valid hex, lipstick finish, name, mood,
+2. In **Imagine**, choose any valid hex, lipstick finish, name, mood,
    notes, and optional reference images.
-3. Save to Wardrobe. Reopen and edit even if you never render the look.
-4. Create a 1080 × 1350 PNG card. Download, share where supported, or use the
+3. Save to **Collect**. Reopen and edit even if you never render the look.
+4. Choose **Luxe**, **Simple**, or **Kiss Mark** and create a 1080 × 1350 PNG
+   Look Card. Download, share where supported, or use the
    long-press image preview.
 5. Naming your studio never forces your name onto a shared card. Collection
-   title on exports is **off by default**, controlled in Settings.
+   title on exports is **off by default**, controlled in **Studio**.
 
 Looks and image/card Blobs live on this device in IndexedDB. They are not an
 account backup: clearing site data, changing browser/profile/device, or browser
@@ -62,11 +71,21 @@ server secret in Replit Secrets. Keep the existing **SESSION_SECRET**
 server-side. Restart API Server after adding a secret. Never commit credentials
 or paste them into chat.
 
-Every request defaults to dry-run unless the user deliberately confirms a live
-render. Setting **DRY_RUN=true** is an operator hard lock against live uploads
-and renders. With this setting absent (or false), a connected server may accept
-an explicitly confirmed live request. No automatic render happens on a color
-change, page load, save, card creation, or export.
+Live uploads and rendering are allowed **only when a YouCam key is configured
+AND `DRY_RUN` is exactly the lowercase string `"false"`**. Every other value,
+including an absent setting, locks live mode off. Unlocking live mode does not
+submit anything: the user must still explicitly confirm. No automatic render
+happens on a color change, page load, save, card creation, or export.
+
+### Server environment variables
+
+Names only; configure values privately, never in source or the client bundle:
+
+- `YouCam_Key` or `YOUCAM_API_KEY` — YouCam server API credential; the latter takes precedence if both exist.
+- `SESSION_SECRET` — signs anonymous session cookies; keep it stable and server-side.
+- `DRY_RUN` — live-mode lock; only the exact lowercase string `"false"` permits live mode when a key is configured.
+- `YOUCAM_DAILY_LIMIT` — live submission cap per UTC day per server process; defaults to 10.
+- `LOG_LEVEL` — server logging level; defaults to info.
 
 The server caps live submission attempts at 10 per UTC day per process by
 default (`YOUCAM_DAILY_LIMIT` may change that non-secret setting). Anonymous
@@ -74,6 +93,18 @@ sessions have same-origin checks, rate limits, ownership-bound upload IDs and
 render jobs, and an in-flight guard. These are hackathon safety controls, not a
 replacement for a production abuse-prevention service. Jobs and limits are
 transient and reset on server restart. No server database is needed.
+
+## Test it
+
+- **Dry-run test (no key needed):** create and save a look in Imagine, open
+  Paint, and run the simulation. It validates the recipe without uploading a
+  photo, calling YouCam, or consuming units. In Collect, export each card style.
+- **Live test:** configure a YouCam key and set `DRY_RUN` to exactly `"false"`
+  in the server environment. In Paint, use your own consenting face photo,
+  review the shade and finish, and confirm twice. Each render uses **1 YouCam
+  unit**; the default daily cap is **10** submission attempts per process.
+  Check the before/after result. Use **Check this same preview** after a timeout
+  to check the existing job rather than submit another render.
 
 ### Exact sequence
 
@@ -85,17 +116,24 @@ transient and reset on server restart. No server database is needed.
    signed upload ticket. The browser uploads the downscaled full-face image
    directly to that destination, honoring the returned method and headers.
    Browser-managed `Content-Length` is not manually set.
-4. Validate again with the returned file ID. Review the exact final payload.
+4. Validate again with the returned file ID. Review the plain-language consent
+   summary; the exact payload is available under collapsed **Technical details**.
 5. `POST /api/youcam/render` requires the recipe, exact `expectedPayload`,
    unique `requestId`, and explicit `liveConfirmed`. Every provided field is
    checked; mismatched colors, null numeric payload fields, extra makeup, and
    changed effects cannot pass the exact-payload comparison.
 6. Poll `GET /api/youcam/jobs/:jobId`. Status checks are not new renders.
-   The server times out after 180 seconds. A client timeout does **not**
-   cancel an upstream task; check the YouCam console before retrying an
-   ambiguous submission.
+   The app's waiting timeout does **not** cancel an upstream task. Check the
+   same preview rather than submit another ambiguous request. Restarting or
+   republishing loses in-memory jobs and prevents recovery through this app.
 7. A successful image is streamed through the session-owned image endpoint
    without disk storage, then saved locally as a Blob.
+
+YouCam result storage can serve images with a generic binary content type
+(`binary/octet-stream` or `application/octet-stream`). The server reads the
+bounded body and verifies PNG/JPEG/WebP signatures before returning the correct
+image content type. Empty or unknown data is rejected. HTTPS, host checks,
+redirect limits, download timeout, and the 15 MB size limit remain enforced.
 
 The documented File API returns `src_file_id`, so uploaded photos use that
 documented source form rather than inventing a public photo URL. No portrait
@@ -126,11 +164,8 @@ real product.
 - Task: `POST /s2s/v2.0/task/makeup-vto`
 - Status: `GET /s2s/v2.0/task/makeup-vto/{task_id}`
 
-The current docs list **1 unit per Makeup VTO V1.0 task** and explicitly state
-query and engine errors consume no units. Thus 1,000 promo units nominally
-cover 1,000 successful tasks if all are allocated to this feature. Actual
-promotion eligibility, expiry, remaining balance and completed-but-client-
-timed-out tasks must be checked in the user's YouCam console.
+The docs list **1 unit per Makeup VTO V1.0 task** and state that query and engine
+errors consume no units. Check actual billing and remaining balance in YouCam.
 
 ## Acceptance checklist
 
@@ -161,38 +196,29 @@ Use an actual Android device, not a desktop screenshot:
   successful result and unit balance change.
 - Verify before/after; confirm failure or timeout leaves the saved look intact.
 
-**A real successful provider render and physical Android Chrome acceptance
-cannot be claimed until these steps are actually performed.**
+A live YouCam lipstick render has been run successfully on the published app
+on an Android phone. The checklist above remains useful for regression testing;
+that successful render does not imply every device or export path was tested.
+
+## Not built yet
+
+- Skin analysis / Skin Mapping (YouCam skin analysis is face-only).
+- In-app live camera.
+- Shade-to-product matching.
 
 ## Hackathon submission
 
-This Replit project holds the source repository and these run instructions.
-The mobile and desktop screenshots are in `generated-artifacts/screenshots/`.
-`generated-artifacts/Fabulous-Future-Me-walkthrough.mp4` is a 72-second,
-captioned, silent walkthrough made from screenshots of the live app. It shows
-the product screens, not recorded interactions; it contains no portrait and
-claims no successful YouCam render. Use `DEMO-SCRIPT.md` for a truthful
-spoken-video version.
-
-Generated screenshots and video are excluded from Git and deployment to keep
-build assets out of source history. Download them separately for submission.
-The source submission repository is private:
+Judges can use the repository directly:
 https://github.com/tivastreasures-ops/fab-future
-Grant access to anyone who needs to review or run it.
-Dry runs are not YouCam renders. Live preview needs a consenting user-provided
-photo, two explicit confirmations, and the configured provider key.
 
-The optional owner-supplied studio illustration is used only on the landing page.
-When a portrait is uploaded, the full uncropped frame is previewed and sent
-directly to YouCam only after explicit live confirmation.
+Use the live demo above or the run instructions here. `DEMO-SCRIPT.md` provides
+the demo sequence. Dry runs are not provider renders; live previews require a
+configured key, unlocked live mode, a consenting photo, and two confirmations.
 
-The studio illustration is intentionally not bundled in the Git repository.
-The local original in `attached_assets/Fabulous_Future_Me_Vanity_Studio_1793474578103.png`
-and its runtime copy at
-`artifacts/fabulous-future-me/public/studio-illustration.png` are ignored by Git.
-The current workspace keeps both files; publishing includes the runtime copy.
-For another checkout, optionally supply that runtime file before building.
-Without it, the app still builds and runs with the plum-and-gold background;
-no import depends on the illustration. The runtime copy is included in a build
-only when supplied, and is never required for drafting, cards, export, or Paint.
-All titles/buttons remain live HTML; working screens have no illustration backgrounds.
+Generated screenshots and walkthrough video are intentionally excluded from
+Git and should be supplied separately with the submission.
+
+The optional owner-supplied landing illustration is not bundled in Git.
+Without it, a fresh checkout runs with a plum-and-gold background. Card artwork
+is bundled; drafting, Paint, saved looks, and PNG exports do not depend on the
+landing illustration.
