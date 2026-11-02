@@ -3,6 +3,7 @@ import { Link, useLocation } from 'wouter';
 import { BookHeart, Palette, Settings2, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { CatMark } from './motifs';
+import { GuidedTourProvider } from './guided-tour';
 
 const NAV = [
   { href: '/draft', label: 'Imagine', icon: Palette },
@@ -14,6 +15,7 @@ const NAV = [
 export function Shell({ children }: { children: ReactNode }) {
   const [loc] = useLocation();
   return (
+    <GuidedTourProvider>
     <div className="min-h-[100dvh] flex flex-col">
       <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[200] btn-couture">Skip to studio</a>
       <header className="velvet on-dark sticky top-0 z-40 border-b-2 border-gold">
@@ -56,6 +58,7 @@ export function Shell({ children }: { children: ReactNode }) {
         </ul>
       </nav>
     </div>
+    </GuidedTourProvider>
   );
 }
 

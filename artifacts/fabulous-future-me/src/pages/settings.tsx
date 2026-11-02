@@ -9,12 +9,14 @@ import { db, friendlyStorageError, requestPersistence } from '@/lib/db';
 import { DEFAULT_SETTINGS } from '@/lib/types';
 import { PageHeading } from '@/components/atelier/shell';
 import { CatMark } from '@/components/atelier/motifs';
+import { useGuidedTour } from '@/components/atelier/guided-tour';
 
 function fmt(n: number) {
   return n > 1e9 ? `${(n / 1e9).toFixed(1)} GB` : `${(n / 1e6).toFixed(1)} MB`;
 }
 
 export default function Settings() {
+  const tour = useGuidedTour();
   const { data } = useSettings();
   const s = data ?? DEFAULT_SETTINGS;
   const save = useSaveSettings();
@@ -50,6 +52,11 @@ export default function Settings() {
     <div className="mx-auto max-w-3xl px-5 py-8">
       <PageHeading eyebrow="Studio" title="Your creative space">Names and preferences live only in this browser.</PageHeading>
       <div className="grid gap-6">
+        <section className="rounded-3xl bg-card gold-frame p-5 sm:p-7 grid gap-3" aria-labelledby="tour-h">
+          <h2 id="tour-h" className="text-2xl text-plum">A little look around</h2>
+          <p className="text-sm text-muted-foreground">Your cat guide can show you around again, whenever you like.</p>
+          <button type="button" className="btn-quiet min-h-11 justify-self-start" onClick={tour.replay} data-testid="button-replay-tour">Replay guided tour</button>
+        </section>
         <section className="rounded-3xl bg-card gold-frame p-5 sm:p-7 grid gap-4" aria-labelledby="name-h">
           <h2 id="name-h" className="text-2xl text-plum">Naming</h2>
           <div className="velvet on-dark gold-frame-dark rounded-2xl p-5 text-center" aria-live="polite">

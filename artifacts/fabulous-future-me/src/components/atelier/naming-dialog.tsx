@@ -3,9 +3,11 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { useSaveSettings } from '@/hooks/use-studio';
 import type { StudioSettings } from '@/lib/types';
 import { CatMark } from './motifs';
+import { useGuidedTour } from './guided-tour';
 
 export function NamingDialog({ open, settings, onDone }: { open: boolean; settings: StudioSettings; onDone: () => void }) {
   const save = useSaveSettings();
+  const tour = useGuidedTour();
   const [name, setName] = useState(settings.displayName);
   const [title, setTitle] = useState(settings.collectionTitle);
   useEffect(() => {
@@ -17,7 +19,7 @@ export function NamingDialog({ open, settings, onDone }: { open: boolean; settin
 
   const finish = (keep: boolean) => {
     const next = keep ? { ...settings, displayName: name.trim(), collectionTitle: title.trim() || 'My Lookbook', onboarded: true } : { ...settings, onboarded: true };
-    save.mutate(next, { onSettled: onDone });
+    save.mutate(next, { onSettled: () => { onDone(); tour.afterNaming(); } });
   };
 
   return (
